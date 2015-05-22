@@ -9,25 +9,50 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace PlaylistEditor
 {
-    public partial class Form1 : Form
+    public partial class Main : Form
     {
 
 
-        public Form1()
+        public Main()
         {
             InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
+        }
+
+        static void DirSearch(string sDir)
+        {
+            try
+            {
+                foreach (string d in Directory.GetDirectories(sDir))
+                {
+                    foreach (string f in Directory.GetFiles(d))
+                    {
+                        Console.WriteLine(f);
+                    }
+                    DirSearch(d);
+                }
+            }
+            catch (System.Exception excpt)
+            {
+                Console.WriteLine(excpt.Message);
+            }
+        }
+
+        public static void writexml(String filename)
+        {
             //"C:\Users\Jaime\.emulationstation\gamelists\mame\gamelist.xml"
             //"gamelists\\mame\\gamelist.xml"
-            String filepath = @"C:\Users\Jaime\.emulationstation\gamelists\mame\gamelist.xml";
+            String filepath = Directory.GetCurrentDirectory() + "\\gamelist.xml"; // @"C:\Users\Jaime\.emulationstation\gamelists\mame\gamelist.xml";
 
-//                <game>
+            //                <game>
             //        <path>C:/Users/Jaime/.emulationstation/roms/mame-libretro/sf/sf2049.zip</path>
             //        <name>San Francisco Rush 2049</name>
             //        <desc>San Francisco Rush 2049 is the third game in the Rush series, sequel to San Francisco Rush and Rush 2: Extreme Racing USA.
@@ -52,8 +77,9 @@ namespace PlaylistEditor
                     xmlWriter.WriteStartElement("gameList");
 
                     xmlWriter.WriteStartElement("game");
-                    xmlWriter.WriteElementString("FirstName", firstName);
-                    xmlWriter.WriteElementString("LastName", lastName);
+                    xmlWriter.WriteElementString("path", filename);
+                    //xmlWriter.WriteElementString("FirstName", firstName);
+                    //xmlWriter.WriteElementString("LastName", lastName);
                     xmlWriter.WriteEndElement();
 
                     xmlWriter.WriteEndElement();
@@ -67,31 +93,15 @@ namespace PlaylistEditor
                 XDocument xDocument = XDocument.Load(filepath);
                 XElement root = xDocument.Element("gameList");
                 IEnumerable<XElement> rows = root.Descendants("game");
-                XElement firstRow = rows.First();
-                firstRow.AddBeforeSelf(
-                   new XElement("Student",
-                   new XElement("FirstName", firstName),
-                   new XElement("LastName", lastName)));
+                XElement lastRow = rows.Last();
+                lastRow.AddAfterSelf(
+                    new XElement("game",
+                    new XElement("path", filename)));
+                //firstRow.AddBeforeSelf(
+                //new XElement("Student",
+                //new XElement("FirstName", firstName),
+                //new XElement("LastName", lastName)));
                 xDocument.Save(filepath);
-            }
-        }
-
-        static void DirSearch(string sDir)
-        {
-            try
-            {
-                foreach (string d in Directory.GetDirectories(sDir))
-                {
-                    foreach (string f in Directory.GetFiles(d))
-                    {
-                        Console.WriteLine(f);
-                    }
-                    DirSearch(d);
-                }
-            }
-            catch (System.Exception excpt)
-            {
-                Console.WriteLine(excpt.Message);
             }
         }
 
@@ -123,6 +133,27 @@ namespace PlaylistEditor
             if (resp == null) return null;
             System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
             return sr.ReadToEnd().Trim();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //foreach (string d in Directory.GetDirectories(@"C:\Users\Jaime\.emulationstation\roms\mame"))
+                //{
+                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
+                foreach (string f in Directory.GetFiles(d))
+                    {
+                        Debug.WriteLine(f);
+                        writexml("./" + Path.GetFileName(f));
+                    }
+                    DirSearch(d);
+                //}
+            }
+            catch (System.Exception excpt)
+            {
+                Console.WriteLine(excpt.Message);
+            }
         }
     }
 }
