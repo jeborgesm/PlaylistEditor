@@ -46,7 +46,7 @@ namespace PlaylistEditor
             }
         }
 
-        public static void writexml(String filename)
+        public static void writexml(String filename, String title)
         {
             //"C:\Users\Jaime\.emulationstation\gamelists\mame\gamelist.xml"
             //"gamelists\\mame\\gamelist.xml"
@@ -78,8 +78,15 @@ namespace PlaylistEditor
 
                     xmlWriter.WriteStartElement("game");
                     xmlWriter.WriteElementString("path", filename);
-                    //xmlWriter.WriteElementString("FirstName", firstName);
-                    //xmlWriter.WriteElementString("LastName", lastName);
+                    xmlWriter.WriteElementString("name", title);
+                    xmlWriter.WriteElementString("desc", filename);
+                    xmlWriter.WriteElementString("image", filename);
+                    xmlWriter.WriteElementString("releasedate", filename);
+                    xmlWriter.WriteElementString("developer", filename);
+                    xmlWriter.WriteElementString("publisher", filename);
+                    xmlWriter.WriteElementString("genre", filename);
+                    xmlWriter.WriteElementString("players", filename);
+                    xmlWriter.WriteElementString("rating", filename);
                     xmlWriter.WriteEndElement();
 
                     xmlWriter.WriteEndElement();
@@ -96,7 +103,8 @@ namespace PlaylistEditor
                 XElement lastRow = rows.Last();
                 lastRow.AddAfterSelf(
                     new XElement("game",
-                    new XElement("path", filename)));
+                    new XElement("path", filename),
+                    new XElement("name", title)));
                 //firstRow.AddBeforeSelf(
                 //new XElement("Student",
                 //new XElement("FirstName", firstName),
@@ -107,19 +115,26 @@ namespace PlaylistEditor
 
         public static string HttpGet(string URI)
         {
-            String ProxyString = "";
-            System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
-            req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
-            System.Net.WebResponse resp = req.GetResponse();
-            System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
-            return sr.ReadToEnd().Trim();
+            try
+            {
+                //String ProxyString = "";
+                System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
+                //req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
+                System.Net.WebResponse resp = req.GetResponse();
+                System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+                return sr.ReadToEnd().Trim();
+            }
+            catch(Exception ex)
+            {
+                return "";
+            }
         }
 
         public static string HttpPost(string URI, string Parameters)
         {
-            String ProxyString = "";
+            //String ProxyString = "";
             System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
-            req.Proxy = new System.Net.WebProxy(ProxyString, true);
+            //req.Proxy = new System.Net.WebProxy(ProxyString, true);
             //Add these, as we're doing a POST
             req.ContentType = "application/x-www-form-urlencoded";
             req.Method = "POST";
@@ -145,7 +160,24 @@ namespace PlaylistEditor
                 foreach (string f in Directory.GetFiles(d))
                     {
                         Debug.WriteLine(f);
-                        writexml("./" + Path.GetFileName(f));
+                        String ScrapeResponse = HttpGet("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
+                        String Title = "";
+                        if (ScrapeResponse != "")
+                        {
+                            String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
+                            String TitleMarkerEnd = "</h1>";
+                            Int32 respLength = ScrapeResponse.Length;
+                            Int32 titleStPos = ScrapeResponse.IndexOf(TitleMarkerStart) + TitleMarkerStart.Length;
+                            Int32 titleEndPos = ScrapeResponse.IndexOf(TitleMarkerEnd);
+                            if (titleStPos < titleEndPos)
+                            {
+                                Int32 titleLength = titleEndPos - titleStPos;
+                                Title = ScrapeResponse.Substring(titleStPos, titleLength);
+                            }
+                        }
+                        Debug.Write(Title); 
+                        writexml("./" + Path.GetFileName(f), Title);
+                        
                     }
                     DirSearch(d);
                 //}
