@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
 using System.Diagnostics;
+using System.Net;
+using System.Drawing.Imaging;
 
 namespace PlaylistEditor
 {
@@ -66,6 +68,12 @@ namespace PlaylistEditor
             //        <rating>0.5</rating>
             //    </game>
 
+            string imagepath = getimage("", filename);
+            if (imagepath != "")
+            {
+                imagepath = "~/.emulationstation/downloaded_images/" + imagepath;
+            }
+
             if (File.Exists(filepath) == false)
             {
                 XmlWriterSettings xmlWriterSettings = new XmlWriterSettings();
@@ -78,9 +86,9 @@ namespace PlaylistEditor
 
                     xmlWriter.WriteStartElement("game");
                     xmlWriter.WriteElementString("path", filename);
-                    xmlWriter.WriteElementString("name", title);
+                    xmlWriter.WriteElementString("name", title.Replace("(MAME version 0.147)",""));
                     xmlWriter.WriteElementString("desc", filename);
-                    xmlWriter.WriteElementString("image", filename);
+                    xmlWriter.WriteElementString("image", imagepath);
                     xmlWriter.WriteElementString("releasedate", filename);
                     xmlWriter.WriteElementString("developer", filename);
                     xmlWriter.WriteElementString("publisher", filename);
@@ -101,10 +109,12 @@ namespace PlaylistEditor
                 XElement root = xDocument.Element("gameList");
                 IEnumerable<XElement> rows = root.Descendants("game");
                 XElement lastRow = rows.Last();
+
                 lastRow.AddAfterSelf(
                     new XElement("game",
                     new XElement("path", filename),
-                    new XElement("name", title)));
+                    new XElement("name", title),
+                    new XElement("image", imagepath)));
                 //firstRow.AddBeforeSelf(
                 //new XElement("Student",
                 //new XElement("FirstName", firstName),
@@ -148,6 +158,120 @@ namespace PlaylistEditor
             if (resp == null) return null;
             System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
             return sr.ReadToEnd().Trim();
+        }
+
+        public static string getimage(string inHtml, string fileName)
+        {
+            try
+            {
+                string foundpath = "";
+
+                if (Directory.Exists("mame") == false)
+                {
+                    Directory.CreateDirectory("mame");
+                }
+
+                using (WebClient webClient = new WebClient()) 
+                {
+                    //http://www.mamedb.com/image/snap/64streetj
+                    //http://www.mamedb.com/image/title/64streetj
+                    //<tbody><tr><td><img src="/titles/64street.png" alt="Title Screen:  64th. Street - A Detective Story (Japan)"></td></tr><tr><td align="center">Title Screen</td></tr></tbody>
+
+                    //byte [] data = webClient.DownloadData("https://fbcdn-sphotos-h-a.akamaihd.net/hphotos-ak-xpf1/v/t34.0-12/10555140_10201501435212873_1318258071_n.jpg?oh=97ebc03895b7acee9aebbde7d6b002bf&oe=53C9ABB0&__gda__=1405685729_110e04e71d9");
+                    byte[] data = webClient.DownloadData("http://www.mamedb.com/snap/" + Path.GetFileNameWithoutExtension(fileName) + ".png");
+
+                    if (data.Length > 0)
+                    {
+                        using (MemoryStream mem = new MemoryStream(data))
+                        {
+                            var yourImage = Image.FromStream(mem);
+
+                            ///mame/sf2049-image.jpg/
+                            if (yourImage.RawFormat == ImageFormat.Jpeg)
+                            {
+                                // If you want it as Png
+                                foundpath = "mame/" + fileName + "-image.png";
+                                yourImage.Save(foundpath, ImageFormat.Png);
+                            }
+                            else if (yourImage.RawFormat == ImageFormat.Png)
+                            {
+                                // If you want it as Jpeg
+                                foundpath = "mame/" + fileName + "-image.jpg";
+                                yourImage.Save(foundpath, ImageFormat.Jpeg);
+                            }
+                        }
+                    }
+                }
+                return foundpath;
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
+        }
+
+        public void getRating(string inHtml)
+        {
+            //http://www.mamedb.com/game/64streetj
+    //        <td>	
+    //<h1>Rate This Game</h1>
+    //<b>Score:&nbsp;</b>7.04347826085 (115 votes)<br>	
+
+        }
+
+        public void getDetails(string inHtml)
+        {
+            //http://www.mamedb.com/game/64streetj
+            //<h1>Game Details</h1><br>
+            //<b>Name:&nbsp;</b>64th. Street - A Detective Story (Japan) &nbsp;(clone of: <a href="/game/64street">64street</a>)&nbsp;<br>
+            //<b>Year:&nbsp;</b> <a href="/year/1991">1991</a><br>
+            //<b>Manufacturer:&nbsp;</b> <a href="/manufacturer/Jaleco">Jaleco</a><br>
+            //<b>Filename:&nbsp;</b>64streetj<br>
+            //<b>Status:&nbsp;</b>good<br>
+            //<b>Emulation:&nbsp;</b>good<br>
+            //<b>Color:&nbsp;</b>good<br>
+            //<b>Sound:&nbsp;</b>good<br>
+            //<b>Graphic:&nbsp;</b>good<br>
+            //<b>Palette Size:&nbsp;</b>1024</td>
+
+            //http://www.arcade-museum.com/results.php
+            //q=Alex+Kidd+the+lost+stars&boolean=AND&search_desc=%3D%220%22&type=
+            //<a href="game_detail.php?game_id=6845">Alex Kidd: The Lost Stars</a>
+            //http://www.arcade-museum.com/game_detail.php?game_id=6845
+        
+        //http://thegamesdb.net/api/GetGame.php?name=alex%20kidd%20the%20lost%20stars&platform=arcade
+            //<Game>
+            //<id>16790</id>
+            //<GameTitle>Alex Kidd: The Lost Stars</GameTitle>
+            //<PlatformId>23</PlatformId>
+            //<Platform>Arcade</Platform>
+            //<Overview>
+            //Alex Kidd: The Lost Stars features Alex Kidd and Stella searching for the twelve Zodiac signs.
+            //</Overview>
+            //<Genres>
+            //<genre>Platform</genre>
+            //</Genres>
+            //<Players>1</Players>
+            //<Co-op>No</Co-op>
+            //<Publisher>Sega</Publisher>
+            //<Developer>Sega</Developer>
+            //<Similar>
+            //<SimilarCount>1</SimilarCount>
+            //<Game>
+            //<id>5498</id>
+            //<PlatformId>35</PlatformId>
+            //</Game>
+            //</Similar>
+            //<Images>
+            //<boxart side="front" width="501" height="700" thumb="boxart/thumb/original/front/16790-1.jpg">boxart/original/front/16790-1.jpg</boxart>
+            //<screenshot>
+            //<original width="320" height="224">screenshots/16790-1.jpg</original>
+            //<thumb>screenshots/thumb/16790-1.jpg</thumb>
+            //</screenshot>
+            //</Images>
+            //</Game>
+
+
         }
 
         private void button1_Click(object sender, EventArgs e)
