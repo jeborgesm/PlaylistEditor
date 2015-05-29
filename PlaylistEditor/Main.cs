@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Linq;
 using System.Drawing;
 using System.IO;
-using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
@@ -25,8 +22,46 @@ namespace PlaylistEditor
         }
 
         private void Form1_Load(object sender, EventArgs e)
-        {
+        { }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //foreach (string d in Directory.GetDirectories(@"C:\Users\Jaime\.emulationstation\roms\mame"))
+                //{
+                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
+                foreach (string f in Directory.GetFiles(d))
+                {
+                    Debug.WriteLine(f);
+                    String ScrapeResponse = HttpGet("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
+                    
+                    String Title = "";
+                    if (ScrapeResponse != "")
+                    {
+                        Game game = getDetails(ScrapeResponse);
+                        String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
+                        String TitleMarkerEnd = "</h1>";
+                        Int32 respLength = ScrapeResponse.Length;
+                        Int32 titleStPos = ScrapeResponse.IndexOf(TitleMarkerStart) + TitleMarkerStart.Length;
+                        Int32 titleEndPos = ScrapeResponse.IndexOf(TitleMarkerEnd);
+                        if (titleStPos < titleEndPos)
+                        {
+                            Int32 titleLength = titleEndPos - titleStPos;
+                            game.name = ScrapeResponse.Substring(titleStPos, titleLength);
+                        }
+                        Debug.Write(Title);
+                        game.path = "./" + Path.GetFileName(f);
+                        writexml(game);//"./" + Path.GetFileName(f), Title);
+                    }
+                }
+                DirSearch(d);
+                //}
+            }
+            catch (System.Exception excpt)
+            {
+                Console.WriteLine(excpt.Message);
+            }
         }
 
         static void DirSearch(string sDir)
@@ -48,7 +83,7 @@ namespace PlaylistEditor
             }
         }
 
-        public static void writexml(String filename, String title)
+        static void writexml(Game game)//String filename, String title)
         {
             //"C:\Users\Jaime\.emulationstation\gamelists\mame\gamelist.xml"
             //"gamelists\\mame\\gamelist.xml"
@@ -68,10 +103,10 @@ namespace PlaylistEditor
             //        <rating>0.5</rating>
             //    </game>
 
-            string imagepath = getimage("", filename);
+            string imagepath = getimage("", game.path);
             if (imagepath != "")
             {
-                imagepath = "~/.emulationstation/downloaded_images/" + imagepath;
+                game.image  = "~/.emulationstation/downloaded_images/" + imagepath;
             }
 
             if (File.Exists(filepath) == false)
@@ -85,16 +120,16 @@ namespace PlaylistEditor
                     xmlWriter.WriteStartElement("gameList");
 
                     xmlWriter.WriteStartElement("game");
-                    xmlWriter.WriteElementString("path", filename);
-                    xmlWriter.WriteElementString("name", title.Replace("(MAME version 0.147)",""));
-                    xmlWriter.WriteElementString("desc", filename);
-                    xmlWriter.WriteElementString("image", imagepath);
-                    xmlWriter.WriteElementString("releasedate", filename);
-                    xmlWriter.WriteElementString("developer", filename);
-                    xmlWriter.WriteElementString("publisher", filename);
-                    xmlWriter.WriteElementString("genre", filename);
-                    xmlWriter.WriteElementString("players", filename);
-                    xmlWriter.WriteElementString("rating", filename);
+                    xmlWriter.WriteElementString("path", game.path);
+                    xmlWriter.WriteElementString("name", game.name.Replace("(MAME version 0.147)",""));
+                    xmlWriter.WriteElementString("desc", game.desc);
+                    xmlWriter.WriteElementString("image", game.image);
+                    xmlWriter.WriteElementString("releasedate", game.releasedate);
+                    xmlWriter.WriteElementString("developer", game.developer);
+                    xmlWriter.WriteElementString("publisher", game.publisher);
+                    xmlWriter.WriteElementString("genre", game.genre);
+                    xmlWriter.WriteElementString("players", game.players);
+                    xmlWriter.WriteElementString("rating", game.rating);
                     xmlWriter.WriteEndElement();
 
                     xmlWriter.WriteEndElement();
@@ -112,9 +147,16 @@ namespace PlaylistEditor
 
                 lastRow.AddAfterSelf(
                     new XElement("game",
-                    new XElement("path", filename),
-                    new XElement("name", title),
-                    new XElement("image", imagepath)));
+                    new XElement("path", game.path),
+                    new XElement("desc", game.desc),
+                    new XElement("name", game.name.Replace("(MAME version 0.147)", "")),
+                    new XElement("image", game.image),
+                    new XElement("releasedate", game.releasedate),
+                    new XElement("developer", game.developer),
+                    new XElement("publisher", game.publisher),
+                    new XElement("genre", game.genre),
+                    new XElement("players", game.players),
+                    new XElement("rating", game.rating)));
                 //firstRow.AddBeforeSelf(
                 //new XElement("Student",
                 //new XElement("FirstName", firstName),
@@ -162,6 +204,7 @@ namespace PlaylistEditor
 
         public static string getimage(string inHtml, string fileName)
         {
+            fileName = Path.GetFileNameWithoutExtension(fileName);
             try
             {
                 string foundpath = "";
@@ -178,7 +221,8 @@ namespace PlaylistEditor
                     //<tbody><tr><td><img src="/titles/64street.png" alt="Title Screen:  64th. Street - A Detective Story (Japan)"></td></tr><tr><td align="center">Title Screen</td></tr></tbody>
 
                     //byte [] data = webClient.DownloadData("https://fbcdn-sphotos-h-a.akamaihd.net/hphotos-ak-xpf1/v/t34.0-12/10555140_10201501435212873_1318258071_n.jpg?oh=97ebc03895b7acee9aebbde7d6b002bf&oe=53C9ABB0&__gda__=1405685729_110e04e71d9");
-                    byte[] data = webClient.DownloadData("http://www.mamedb.com/snap/" + Path.GetFileNameWithoutExtension(fileName) + ".png");
+                    byte[] data = webClient.DownloadData("http://www.mamedb.com/snap/" + fileName + ".png");
+                    //byte[] data = Convert.ToByte(HttpGet("http://www.mamedb.com/snap/" + Path.GetFileNameWithoutExtension(fileName) + ".png"));
 
                     if (data.Length > 0)
                     {
@@ -187,18 +231,18 @@ namespace PlaylistEditor
                             var yourImage = Image.FromStream(mem);
 
                             ///mame/sf2049-image.jpg/
-                            if (yourImage.RawFormat == ImageFormat.Jpeg)
-                            {
+                            //if (yourImage.RawFormat == ImageFormat.Jpeg)
+                            //{
                                 // If you want it as Png
                                 foundpath = "mame/" + fileName + "-image.png";
                                 yourImage.Save(foundpath, ImageFormat.Png);
-                            }
-                            else if (yourImage.RawFormat == ImageFormat.Png)
-                            {
-                                // If you want it as Jpeg
-                                foundpath = "mame/" + fileName + "-image.jpg";
-                                yourImage.Save(foundpath, ImageFormat.Jpeg);
-                            }
+                            //}
+                            //else if (yourImage.RawFormat == ImageFormat.Png)
+                            //{
+                            //    // If you want it as Jpeg
+                            //    foundpath = "mame/" + fileName + "-image.jpg";
+                            //    yourImage.Save(foundpath, ImageFormat.Jpeg);
+                            //}
                         }
                     }
                 }
@@ -219,8 +263,38 @@ namespace PlaylistEditor
 
         }
 
-        public void getDetails(string inHtml)
+        static Game getDetails(string inHtml)
         {
+            Game game = new Game();
+            String Detail = "";
+            String DetailMarkerStart = "<h1>Game Details</h1><br/>";
+            String DetailMarkerEnd = "</td>";
+            Int32 respLength = inHtml.Length;
+            Int32 detailStPos = inHtml.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
+
+            Int32 detailEndPos = detailStPos;
+            while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
+            {
+                detailEndPos++;
+            }
+
+            //Int32 detailEndPos = inHtml.IndexOf(DetailMarkerEnd);
+            if (detailStPos < detailEndPos)
+            {
+                Int32 titleLength = detailEndPos - detailStPos;
+                Detail = inHtml.Substring(detailStPos, titleLength);
+
+                //Int32 detailEndPos = detailStPos;
+                //while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
+                //{
+                //    detailEndPos++;
+                //}
+                string[] Detaildata = Detail.Replace("<br/>", "|").Replace("<b>", "").Replace("&nbsp;</b>", "").Replace("&nbsp</b>", "").Split('|');
+                string ManufMarkerStart = "<b>Manufacturer:&nbsp</b> <a href='/manufacturer/";
+                string ManufMarkerEnd = "</td>";
+                string manufacturer = Detail.Substring(Detail.IndexOf(ManufMarkerStart) + ManufMarkerStart.Length, 5);
+            }
+
             //http://www.mamedb.com/game/64streetj
             //<h1>Game Details</h1><br>
             //<b>Name:&nbsp;</b>64th. Street - A Detective Story (Japan) &nbsp;(clone of: <a href="/game/64street">64street</a>)&nbsp;<br>
@@ -271,45 +345,9 @@ namespace PlaylistEditor
             //</Images>
             //</Game>
 
-
+            return game;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                //foreach (string d in Directory.GetDirectories(@"C:\Users\Jaime\.emulationstation\roms\mame"))
-                //{
-                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
-                foreach (string f in Directory.GetFiles(d))
-                    {
-                        Debug.WriteLine(f);
-                        String ScrapeResponse = HttpGet("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
-                        String Title = "";
-                        if (ScrapeResponse != "")
-                        {
-                            String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
-                            String TitleMarkerEnd = "</h1>";
-                            Int32 respLength = ScrapeResponse.Length;
-                            Int32 titleStPos = ScrapeResponse.IndexOf(TitleMarkerStart) + TitleMarkerStart.Length;
-                            Int32 titleEndPos = ScrapeResponse.IndexOf(TitleMarkerEnd);
-                            if (titleStPos < titleEndPos)
-                            {
-                                Int32 titleLength = titleEndPos - titleStPos;
-                                Title = ScrapeResponse.Substring(titleStPos, titleLength);
-                            }
-                        }
-                        Debug.Write(Title); 
-                        writexml("./" + Path.GetFileName(f), Title);
-                        
-                    }
-                    DirSearch(d);
-                //}
-            }
-            catch (System.Exception excpt)
-            {
-                Console.WriteLine(excpt.Message);
-            }
-        }
+
     }
 }
