@@ -377,27 +377,43 @@ namespace PlaylistEditor
             String Detail = "";
             String GameID = "";
             String GameDetailResponse = "";
-            string gameidMarkerEnd = ">" + gameName + "</a>";
-
-
-            String DetailMarkerStart = "game_detail.php?game_id=";
-            String DetailMarkerEnd = ">";
-            Int32 respLength = ScrapeResponse.Length;
-            Int32 detailStPos = ScrapeResponse.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
-
-            Int32 detailEndPos = detailStPos;
-            while (ScrapeResponse.Substring(detailEndPos, 1) != DetailMarkerEnd)
+            string gameidMarkerEnd = "\">" + gameName.ToUpper() + "</A>";
+            Int32 gameidEndPos = ScrapeResponse.ToUpper().IndexOf(gameidMarkerEnd) + gameidMarkerEnd.Length;
+            Int32 gameidStPos = gameidEndPos;
+            if (gameidEndPos > gameidMarkerEnd.Length)
             {
-                detailEndPos++;
+                while (ScrapeResponse.Substring(gameidStPos, 1) != "=")
+                {
+                    gameidStPos--;
+                }
+
+                if (gameidStPos < gameidEndPos)
+                {
+                    Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
+                    GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
+
+                    GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
+                }
             }
 
-            if (detailStPos < detailEndPos)
-            {
-                Int32 titleLength = (detailEndPos -1)- detailStPos;
-                GameID = ScrapeResponse.Substring(detailStPos, titleLength);
+            //String DetailMarkerStart = "game_detail.php?game_id=";
+            //String DetailMarkerEnd = ">";
+            //Int32 respLength = ScrapeResponse.Length;
+            //Int32 detailStPos = ScrapeResponse.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
 
-                GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id="+GameID);
-            }
+            //Int32 detailEndPos = detailStPos;
+            //while (ScrapeResponse.Substring(detailEndPos, 1) != DetailMarkerEnd)
+            //{
+            //    detailEndPos++;
+            //}
+
+            //if (detailStPos < detailEndPos)
+            //{
+            //    Int32 titleLength = (detailEndPos -1)- detailStPos;
+            //    GameID = ScrapeResponse.Substring(detailStPos, titleLength);
+
+            //    GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id="+GameID);
+            //}
 
             Game game = new Game();
             game.desc = GameDetailResponse;
