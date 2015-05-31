@@ -4,11 +4,15 @@ using System.Linq;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using System.Net;
+using System.Web;
 using System.Xml;
 using System.Xml.Linq;
 using System.Diagnostics;
-using System.Net;
 using System.Drawing.Imaging;
+using System.Collections.Specialized;
+using System.Text;
+
 
 namespace PlaylistEditor
 {
@@ -30,7 +34,8 @@ namespace PlaylistEditor
             {
                 //foreach (string d in Directory.GetDirectories(@"C:\Users\Jaime\.emulationstation\roms\mame"))
                 //{
-                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
+                //string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
+                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-mame4all";
                 foreach (string f in Directory.GetFiles(d))
                 {
                     Debug.WriteLine(f);
@@ -51,6 +56,7 @@ namespace PlaylistEditor
                             game.name = ScrapeResponse.Substring(titleStPos, titleLength);
                         }
                         Debug.Write(Title);
+                        ResultsBox.Text += Title + Environment.NewLine;
                         game.path = "./" + Path.GetFileName(f);
                         writexml(game);//"./" + Path.GetFileName(f), Title);
                     }
@@ -62,6 +68,11 @@ namespace PlaylistEditor
             {
                 Console.WriteLine(excpt.Message);
             }
+        }
+
+        private void btnGetGameDetails_Click(object sender, EventArgs e)
+        {
+            ResultsBox.Text += getDetailsArcadeMuseum(this.GameNameBox.Text).desc + Environment.NewLine; ;
         }
 
         static void DirSearch(string sDir)
@@ -170,7 +181,12 @@ namespace PlaylistEditor
             try
             {
                 //String ProxyString = "";
-                System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
+                //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
+
+                // Create a new 'HttpWebRequest' object to the mentioned URL.
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
+                req.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+
                 //req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
                 System.Net.WebResponse resp = req.GetResponse();
                 System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
@@ -185,7 +201,10 @@ namespace PlaylistEditor
         public static string HttpPost(string URI, string Parameters)
         {
             //String ProxyString = "";
-            System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
+            //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
+            req.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+
             //req.Proxy = new System.Net.WebProxy(ProxyString, true);
             //Add these, as we're doing a POST
             req.ContentType = "application/x-www-form-urlencoded";
@@ -221,7 +240,8 @@ namespace PlaylistEditor
                     //<tbody><tr><td><img src="/titles/64street.png" alt="Title Screen:  64th. Street - A Detective Story (Japan)"></td></tr><tr><td align="center">Title Screen</td></tr></tbody>
 
                     //byte [] data = webClient.DownloadData("https://fbcdn-sphotos-h-a.akamaihd.net/hphotos-ak-xpf1/v/t34.0-12/10555140_10201501435212873_1318258071_n.jpg?oh=97ebc03895b7acee9aebbde7d6b002bf&oe=53C9ABB0&__gda__=1405685729_110e04e71d9");
-                    byte[] data = webClient.DownloadData("http://www.mamedb.com/snap/" + fileName + ".png");
+                    //byte[] data = webClient.DownloadData("http://www.mamedb.com/snap/" + fileName + ".png");
+                    byte[] data = webClient.DownloadData("http://www.mamedb.com/titles/" + fileName + ".png");
                     //byte[] data = Convert.ToByte(HttpGet("http://www.mamedb.com/snap/" + Path.GetFileNameWithoutExtension(fileName) + ".png"));
 
                     if (data.Length > 0)
@@ -293,6 +313,7 @@ namespace PlaylistEditor
                 string ManufMarkerStart = "<b>Manufacturer:&nbsp</b> <a href='/manufacturer/";
                 string ManufMarkerEnd = "</td>";
                 string manufacturer = Detail.Substring(Detail.IndexOf(ManufMarkerStart) + ManufMarkerStart.Length, 5);
+                //game.developer = manufacturer;
             }
 
             //http://www.mamedb.com/game/64streetj
@@ -348,6 +369,144 @@ namespace PlaylistEditor
             return game;
         }
 
+        static Game getDetailsArcadeMuseum(string gameName)
+        {
+            String ScrapeResponse = HttpPost("http://www.arcade-museum.com/results.php","q="+ HttpUtility.UrlEncode(gameName)+"&boolean=AND&search_desc=%3D%220%22&type=");
+            //"Search results for: "
 
+            String Detail = "";
+            String GameID = "";
+            String GameDetailResponse = "";
+            string gameidMarkerEnd = ">" + gameName + "</a>";
+
+
+            String DetailMarkerStart = "game_detail.php?game_id=";
+            String DetailMarkerEnd = ">";
+            Int32 respLength = ScrapeResponse.Length;
+            Int32 detailStPos = ScrapeResponse.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
+
+            Int32 detailEndPos = detailStPos;
+            while (ScrapeResponse.Substring(detailEndPos, 1) != DetailMarkerEnd)
+            {
+                detailEndPos++;
+            }
+
+            if (detailStPos < detailEndPos)
+            {
+                Int32 titleLength = (detailEndPos -1)- detailStPos;
+                GameID = ScrapeResponse.Substring(detailStPos, titleLength);
+
+                GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id="+GameID);
+            }
+
+            Game game = new Game();
+            game.desc = GameDetailResponse;
+
+            //http://www.arcade-museum.com/results.php
+            //q=Alex+Kidd+the+lost+stars&boolean=AND&search_desc=%3D%220%22&type=
+            //<a href="game_detail.php?game_id=6845">Alex Kidd: The Lost Stars</a>
+            //http://www.arcade-museum.com/game_detail.php?game_id=6845
+
+            return game;
+
+            //NameValueCollection parameters = new NameValueCollection();
+            //parameters.Add("q", HttpUtility.UrlEncode(gameName));
+            //parameters.Add("boolean", "AND");
+            //parameters.Add("search_desc", "%3D%220%22");
+            //parameters.Add("type", null);
+            //String ScrapeResponse = HttpPostSimple("http://www.arcade-museum.com/results.php", parameters);
+
+            //string ScrapeResponse = Crawl("http://www.arcade-museum.com", "http://www.arcade-museum.com/results.php", "q=" + HttpUtility.UrlEncode(gameName) + "&boolean=AND&search_desc=%3D%220%22&type=");
+        }
+
+        public static string HttpPostSimple(string URI, NameValueCollection parameters)
+        {
+            string result = "";
+            using (WebClient client = new WebClient())
+            {
+                byte[] response =
+                client.UploadValues(URI, parameters);
+
+                result = System.Text.Encoding.UTF8.GetString(response);
+            }
+            return result;
+        }
+
+        public static string Crawl(string rootUrl, string Url, string postParameters)
+        {
+            var cookieContainer = new CookieContainer();
+            //string test =  HttpGet(rootUrl);
+            /* initial GET Request */
+            //var getRequest = (HttpWebRequest)WebRequest.Create(rootUrl);
+
+            HttpWebRequest getRequest = (HttpWebRequest)WebRequest.Create(Url);
+            getRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+
+            getRequest.CookieContainer = cookieContainer;
+            ReadResponse(getRequest); // nothing to do with this, because captcha is f#@%ing dumb :)
+
+            /* POST Request */
+            //var postRequest = (HttpWebRequest)WebRequest.Create(Url);
+            HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create(Url);
+            postRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+
+            postRequest.AllowAutoRedirect = false; // we'll do the redirect manually; .NET does it badly
+            postRequest.CookieContainer = cookieContainer;
+            postRequest.Method = "POST";
+            postRequest.ContentType = "application/x-www-form-urlencoded";
+
+            //var postParameters =
+            //    "_EventName=E%27CONFIRMAR%27.&_EventGridId=&_EventRowId=&_MSG=&_CONINSEST=&" +
+            //    "_CONINSESTG=08775724000119&cfield=much&_VALIDATIONRESULT=1&BUTTON1=Confirmar&" +
+            //    "sCallerURL=";
+
+            var bytes = Encoding.UTF8.GetBytes(postParameters);
+
+            postRequest.ContentLength = bytes.Length;
+
+            using (var requestStream = postRequest.GetRequestStream())
+                requestStream.Write(bytes, 0, bytes.Length);
+
+            var webResponse = postRequest.GetResponse();
+
+            ReadResponse(postRequest); // not interested in this either
+
+            var redirectLocation = webResponse.Headers[HttpResponseHeader.Location];
+
+            var finalGetRequest = (HttpWebRequest)WebRequest.Create(redirectLocation);
+
+
+            /* Apply fix for the cookie */
+            FixMisplacedCookie(cookieContainer,Url,rootUrl);
+
+            /* do the final request using the correct cookies. */
+            finalGetRequest.CookieContainer = cookieContainer;
+
+            var responseText = ReadResponse(finalGetRequest);
+
+            return responseText; // Hooray!
+        }
+
+        private static string ReadResponse(HttpWebRequest getRequest)
+        {
+            using (var responseStream = getRequest.GetResponse().GetResponseStream())
+            using (var sr = new StreamReader(responseStream, Encoding.UTF8))
+            {
+                return sr.ReadToEnd();
+            }
+        }
+
+        private static void FixMisplacedCookie(CookieContainer cookieContainer, string Url, string goodUrl)
+        {
+            var misplacedCookie = cookieContainer.GetCookies(new Uri(Url))[0];
+
+            misplacedCookie.Path = "/"; // instead of "/sintegra/servlet/hwsintco"
+
+            //place the cookie in thee right place...
+            cookieContainer.SetCookies(
+                new Uri(goodUrl),//"https://www.sefaz.rr.gov.br/"),
+                misplacedCookie.ToString());
+        }
     }
+
 }
