@@ -45,6 +45,7 @@ namespace PlaylistEditor
                     if (ScrapeResponse != "")
                     {
                         Game game = getDetails(ScrapeResponse);
+
                         String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
                         String TitleMarkerEnd = "</h1>";
                         Int32 respLength = ScrapeResponse.Length;
@@ -55,6 +56,9 @@ namespace PlaylistEditor
                             Int32 titleLength = titleEndPos - titleStPos;
                             game.name = ScrapeResponse.Substring(titleStPos, titleLength);
                         }
+
+                        game = getDetailsArcadeMuseum(game.name, game);
+
                         Debug.Write(Title);
                         ResultsBox.Text += Title + Environment.NewLine;
                         game.path = "./" + Path.GetFileName(f);
@@ -72,7 +76,7 @@ namespace PlaylistEditor
 
         private void btnGetGameDetails_Click(object sender, EventArgs e)
         {
-            ResultsBox.Text += getDetailsArcadeMuseum(this.GameNameBox.Text).desc + Environment.NewLine; ;
+            ResultsBox.Text += getDetailsArcadeMuseum(this.GameNameBox.Text, new Game()).desc + Environment.NewLine; ;
         }
 
         static void DirSearch(string sDir)
@@ -369,12 +373,25 @@ namespace PlaylistEditor
             return game;
         }
 
-        static Game getDetailsArcadeMuseum(string gameName)
+        static Game getDetailsArcadeMuseum(string gameName, Game game)
         {
-            String ScrapeResponse = HttpPost("http://www.arcade-museum.com/results.php","q="+ HttpUtility.UrlEncode(gameName)+"&boolean=AND&search_desc=%3D%220%22&type=");
-            //"Search results for: "
+            //Start: Description</H2>
+            //End:<p>
 
-            String Detail = "";
+            //Start: 
+            //<H2>Game Play</H2>
+            //End:<H2>Miscellaneous</H2>
+
+            //title image
+            //<img alt="Makyou Senshi - Title screen image" src="/images/118/11812421378.png" width="240" height="256">
+
+            //Start: <h2>Cheats, Tricks, Bugs, and Easter Eggs</h2>
+            //End: <h2>
+
+
+            String ScrapeResponse = HttpPost("http://www.arcade-museum.com/results.php","q="+ HttpUtility.UrlEncode(gameName)+"&boolean=AND&search_desc=%3D%220%22&type=");
+
+            string Description = "";
             String GameID = "";
             String GameDetailResponse = "";
             string gameidMarkerEnd = "\">" + gameName.ToUpper() + "</A>";
@@ -393,46 +410,31 @@ namespace PlaylistEditor
                     GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
 
                     GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
+
+                    
+                    String DescMarkerStart = "Description</H2>";
+                    String DescMarkerEnd = "<p>";
+                    Int32 respLength = GameDetailResponse.Length;
+                    Int32 descStPos = GameDetailResponse.IndexOf(DescMarkerStart) + DescMarkerStart.Length;
+
+                    Int32 descEndPos = descStPos;
+                    while (GameDetailResponse.Substring(descEndPos, 3) != DescMarkerEnd)
+                    {
+                        descEndPos++;
+                    }
+
+                    if (descStPos < descEndPos)
+                    {
+                        Int32 DescLength = descEndPos - descStPos;
+                        Description = GameDetailResponse.Substring(descStPos, DescLength);
+                    }
                 }
             }
 
-            //String DetailMarkerStart = "game_detail.php?game_id=";
-            //String DetailMarkerEnd = ">";
-            //Int32 respLength = ScrapeResponse.Length;
-            //Int32 detailStPos = ScrapeResponse.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
-
-            //Int32 detailEndPos = detailStPos;
-            //while (ScrapeResponse.Substring(detailEndPos, 1) != DetailMarkerEnd)
-            //{
-            //    detailEndPos++;
-            //}
-
-            //if (detailStPos < detailEndPos)
-            //{
-            //    Int32 titleLength = (detailEndPos -1)- detailStPos;
-            //    GameID = ScrapeResponse.Substring(detailStPos, titleLength);
-
-            //    GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id="+GameID);
-            //}
-
-            Game game = new Game();
-            game.desc = GameDetailResponse;
-
-            //http://www.arcade-museum.com/results.php
-            //q=Alex+Kidd+the+lost+stars&boolean=AND&search_desc=%3D%220%22&type=
-            //<a href="game_detail.php?game_id=6845">Alex Kidd: The Lost Stars</a>
-            //http://www.arcade-museum.com/game_detail.php?game_id=6845
+            
+            game.desc = Description;
 
             return game;
-
-            //NameValueCollection parameters = new NameValueCollection();
-            //parameters.Add("q", HttpUtility.UrlEncode(gameName));
-            //parameters.Add("boolean", "AND");
-            //parameters.Add("search_desc", "%3D%220%22");
-            //parameters.Add("type", null);
-            //String ScrapeResponse = HttpPostSimple("http://www.arcade-museum.com/results.php", parameters);
-
-            //string ScrapeResponse = Crawl("http://www.arcade-museum.com", "http://www.arcade-museum.com/results.php", "q=" + HttpUtility.UrlEncode(gameName) + "&boolean=AND&search_desc=%3D%220%22&type=");
         }
 
         public static string HttpPostSimple(string URI, NameValueCollection parameters)
