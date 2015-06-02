@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Collections.Specialized;
 using System.Text;
+using System.Threading;
 
 
 namespace PlaylistEditor
@@ -30,6 +31,21 @@ namespace PlaylistEditor
 
         private void button1_Click(object sender, EventArgs e)
         {
+            //Create a new Thread start object passing the method to be started
+            ThreadStart oThreadStart = new ThreadStart(this.DoWork);
+
+            //Create a new threat passing the start details
+            Thread oThread = new Thread(oThreadStart);
+
+            //Optionally give the Thread a name
+            oThread.Name = "Processing Thread";
+
+            //Start the thread
+            oThread.Start();
+        }
+
+        private void DoWork()
+        {
             try
             {
                 //foreach (string d in Directory.GetDirectories(@"C:\Users\Jaime\.emulationstation\roms\mame"))
@@ -40,7 +56,7 @@ namespace PlaylistEditor
                 {
                     Debug.WriteLine(f);
                     String ScrapeResponse = HttpGet("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
-                    
+
                     String Title = "";
                     if (ScrapeResponse != "")
                     {
@@ -54,19 +70,31 @@ namespace PlaylistEditor
                         if (titleStPos < titleEndPos)
                         {
                             Int32 titleLength = titleEndPos - titleStPos;
-                            game.name = ScrapeResponse.Substring(titleStPos, titleLength);
+                            game.name = ScrapeResponse.Substring(titleStPos, titleLength).Replace("(MAME version 0.147)", "").Trim();
                         }
 
                         game = getDetailsArcadeMuseum(game.name, game);
 
-                        Debug.Write(Title);
-                        ResultsBox.Text += Title + Environment.NewLine;
+                        //Debug.Write(Title);
+                        
+                        //Refresh tht Results Box by invoking it on the main window thread
+                        ResultsBox.Invoke(
+                            (MethodInvoker)
+                            delegate
+                            {
+                                ResultsBox.Text += game.name+" - "+game.desc + Environment.NewLine;
+                                //Increment the progress bar
+                            }
+                        );
+
                         game.path = "./" + Path.GetFileName(f);
                         writexml(game);//"./" + Path.GetFileName(f), Title);
                     }
                 }
                 DirSearch(d);
-                //}
+
+                //Join the thread
+                Thread.CurrentThread.Join(0);
             }
             catch (System.Exception excpt)
             {
@@ -136,7 +164,7 @@ namespace PlaylistEditor
 
                     xmlWriter.WriteStartElement("game");
                     xmlWriter.WriteElementString("path", game.path);
-                    xmlWriter.WriteElementString("name", game.name.Replace("(MAME version 0.147)",""));
+                    xmlWriter.WriteElementString("name", game.name);
                     xmlWriter.WriteElementString("desc", game.desc);
                     xmlWriter.WriteElementString("image", game.image);
                     xmlWriter.WriteElementString("releasedate", game.releasedate);
@@ -164,7 +192,7 @@ namespace PlaylistEditor
                     new XElement("game",
                     new XElement("path", game.path),
                     new XElement("desc", game.desc),
-                    new XElement("name", game.name.Replace("(MAME version 0.147)", "")),
+                    new XElement("name", game.name),
                     new XElement("image", game.image),
                     new XElement("releasedate", game.releasedate),
                     new XElement("developer", game.developer),
@@ -375,65 +403,71 @@ namespace PlaylistEditor
 
         static Game getDetailsArcadeMuseum(string gameName, Game game)
         {
-            //Start: Description</H2>
-            //End:<p>
-
-            //Start: 
-            //<H2>Game Play</H2>
-            //End:<H2>Miscellaneous</H2>
-
-            //title image
-            //<img alt="Makyou Senshi - Title screen image" src="/images/118/11812421378.png" width="240" height="256">
-
-            //Start: <h2>Cheats, Tricks, Bugs, and Easter Eggs</h2>
-            //End: <h2>
-
-
-            String ScrapeResponse = HttpPost("http://www.arcade-museum.com/results.php","q="+ HttpUtility.UrlEncode(gameName)+"&boolean=AND&search_desc=%3D%220%22&type=");
-
-            string Description = "";
-            String GameID = "";
-            String GameDetailResponse = "";
-            string gameidMarkerEnd = "\">" + gameName.ToUpper() + "</A>";
-            Int32 gameidEndPos = ScrapeResponse.ToUpper().IndexOf(gameidMarkerEnd) + gameidMarkerEnd.Length;
-            Int32 gameidStPos = gameidEndPos;
-            if (gameidEndPos > gameidMarkerEnd.Length)
+            try
             {
-                while (ScrapeResponse.Substring(gameidStPos, 1) != "=")
-                {
-                    gameidStPos--;
-                }
+                //Start: Description</H2>
+                //End:<p>
 
-                if (gameidStPos < gameidEndPos)
-                {
-                    Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
-                    GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
+                //Start: 
+                //<H2>Game Play</H2>
+                //End:<H2>Miscellaneous</H2>
 
-                    GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
+                //title image
+                //<img alt="Makyou Senshi - Title screen image" src="/images/118/11812421378.png" width="240" height="256">
+
+                //Start: <h2>Cheats, Tricks, Bugs, and Easter Eggs</h2>
+                //End: <h2>
+
+
+                String ScrapeResponse = HttpPost("http://www.arcade-museum.com/results.php","q="+ HttpUtility.UrlEncode(gameName)+"&boolean=AND&search_desc=%3D%220%22&type=");
+
+                string Description = "";
+                String GameID = "";
+                String GameDetailResponse = "";
+                string gameidMarkerEnd = "\">" + gameName.ToUpper() + "</A>";
+                Int32 gameidEndPos = ScrapeResponse.ToUpper().IndexOf(gameidMarkerEnd) + gameidMarkerEnd.Length;
+                Int32 gameidStPos = gameidEndPos;
+                if (gameidEndPos > gameidMarkerEnd.Length)
+                {
+                    while (ScrapeResponse.Substring(gameidStPos, 1) != "=")
+                    {
+                        gameidStPos--;
+                    }
+
+                    if (gameidStPos < gameidEndPos)
+                    {
+                        Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
+                        GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
+
+                        GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
 
                     
-                    String DescMarkerStart = "Description</H2>";
-                    String DescMarkerEnd = "<p>";
-                    Int32 respLength = GameDetailResponse.Length;
-                    Int32 descStPos = GameDetailResponse.IndexOf(DescMarkerStart) + DescMarkerStart.Length;
+                        String DescMarkerStart = "Description</H2>";
+                        String DescMarkerEnd = "<p>";
+                        Int32 respLength = GameDetailResponse.Length;
+                        Int32 descStPos = GameDetailResponse.IndexOf(DescMarkerStart) + DescMarkerStart.Length;
 
-                    Int32 descEndPos = descStPos;
-                    while (GameDetailResponse.Substring(descEndPos, 3) != DescMarkerEnd)
-                    {
-                        descEndPos++;
-                    }
+                        Int32 descEndPos = descStPos;
+                        while (GameDetailResponse.Substring(descEndPos, 3) != DescMarkerEnd)
+                        {
+                            descEndPos++;
+                        }
 
-                    if (descStPos < descEndPos)
-                    {
-                        Int32 DescLength = descEndPos - descStPos;
-                        Description = GameDetailResponse.Substring(descStPos, DescLength);
+                        if (descStPos < descEndPos)
+                        {
+                            Int32 DescLength = descEndPos - descStPos;
+                            Description = GameDetailResponse.Substring(descStPos, DescLength);
+                        }
                     }
                 }
+        
+                game.desc = Description;
+
             }
-
-            
-            game.desc = Description;
-
+            catch (System.Exception excpt)
+            {
+                Console.WriteLine(excpt.Message);
+            }
             return game;
         }
 
