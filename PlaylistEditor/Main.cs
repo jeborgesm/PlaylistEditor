@@ -31,17 +31,23 @@ namespace PlaylistEditor
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //Create a new Thread start object passing the method to be started
-            ThreadStart oThreadStart = new ThreadStart(this.DoWork);
+            try { 
+                //Create a new Thread start object passing the method to be started
+                ThreadStart oThreadStart = new ThreadStart(this.DoWork);
 
-            //Create a new threat passing the start details
-            Thread oThread = new Thread(oThreadStart);
+                //Create a new threat passing the start details
+                Thread oThread = new Thread(oThreadStart);
 
-            //Optionally give the Thread a name
-            oThread.Name = "Processing Thread";
+                //Optionally give the Thread a name
+                oThread.Name = "Processing Thread";
 
-            //Start the thread
-            oThread.Start();
+                //Start the thread
+                oThread.Start();
+            }
+            catch (System.Exception excpt)
+            {
+                ResultsBox.Text += excpt.Message + Environment.NewLine;
+            }
         }
 
         private void DoWork()
@@ -50,8 +56,18 @@ namespace PlaylistEditor
             {
                 //foreach (string d in Directory.GetDirectories(@"C:\Users\Jaime\.emulationstation\roms\mame"))
                 //{
-                //string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
-                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-mame4all";
+                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
+                //string d = @"C:\Users\Jaime\.emulationstation\roms\mame-mame4all";
+
+                int fileCount = Directory.GetFiles(d).Count();
+                int filesProcessed = 0;
+
+                ProcessProgress.Invoke((MethodInvoker)
+                    delegate {ProcessProgress.Value = 0; ProcessProgress.Maximum = fileCount;});
+
+                ResultsBox.Invoke((MethodInvoker)
+                    delegate {ResultsBox.Text = ""; });
+                
                 foreach (string f in Directory.GetFiles(d))
                 {
                     Debug.WriteLine(f);
@@ -61,6 +77,7 @@ namespace PlaylistEditor
                     if (ScrapeResponse != "")
                     {
                         Game game = getDetails(ScrapeResponse);
+                        game.path = "./" + Path.GetFileName(f);
 
                         String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
                         String TitleMarkerEnd = "</h1>";
@@ -71,24 +88,53 @@ namespace PlaylistEditor
                         {
                             Int32 titleLength = titleEndPos - titleStPos;
                             game.name = ScrapeResponse.Substring(titleStPos, titleLength).Replace("(MAME version 0.147)", "").Trim();
+
+                            int gameParenthesis = game.name.IndexOf("(");
+                            string cleanName = "";
+                            if (gameParenthesis > 0)
+                            {
+                                cleanName = game.name.Substring(0, game.name.IndexOf("(")).Trim().Replace(":", "");
+                            }
+                            else
+                            {
+                                cleanName = game.name.Replace(":", "");
+                            }
+
+                            string imagepath = getimage("", game.path);
+                            if (imagepath != "")
+                            {
+                                game.image = "~/.emulationstation/downloaded_images/" + imagepath;
+                            }
+
+                            game = getDetailsArcadeMuseum(cleanName, game);
                         }
+                       
+                        writexml(game);
 
-                        game = getDetailsArcadeMuseum(game.name, game);
-
-                        //Debug.Write(Title);
-                        
-                        //Refresh tht Results Box by invoking it on the main window thread
+                        //Refresh the Results Box by invoking it on the main window thread
                         ResultsBox.Invoke(
                             (MethodInvoker)
                             delegate
-                            {
-                                ResultsBox.Text += game.name+" - "+game.desc + Environment.NewLine;
-                                //Increment the progress bar
+                            {  
+                                ResultsBox.Text += game.name + " - " + game.desc + Environment.NewLine;
+                                ResultsBox.SelectionStart = ResultsBox.Text.Length;
+                                ResultsBox.ScrollToCaret();
                             }
                         );
 
-                        game.path = "./" + Path.GetFileName(f);
-                        writexml(game);//"./" + Path.GetFileName(f), Title);
+                        filesProcessed++;
+                        ProcessProgress.Invoke((MethodInvoker)
+                        delegate
+                        {
+                            //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
+                            ProcessProgress.Value++;
+                        });
+
+                        ProgressStatus.Invoke((MethodInvoker)
+                        delegate
+                        {
+                            ProgressStatus.Text = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
+                        });
                     }
                 }
                 DirSearch(d);
@@ -98,13 +144,26 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
-                Console.WriteLine(excpt.Message);
+                //Refresh the Results Box by invoking it on the main window thread
+                ResultsBox.Invoke(
+                    (MethodInvoker)
+                    delegate
+                    {
+                        ResultsBox.Text += excpt.Source + " - " + excpt.StackTrace + " - " +  excpt.Message + Environment.NewLine;
+                    }
+                );
             }
         }
 
         private void btnGetGameDetails_Click(object sender, EventArgs e)
         {
-            ResultsBox.Text += getDetailsArcadeMuseum(this.GameNameBox.Text, new Game()).desc + Environment.NewLine; ;
+            try { 
+                ResultsBox.Text += getDetailsArcadeMuseum(this.GameNameBox.Text, new Game()).desc + Environment.NewLine;
+            }
+            catch (System.Exception excpt)
+            {
+                ResultsBox.Text += excpt.Message + Environment.NewLine;
+            }
         }
 
         static void DirSearch(string sDir)
@@ -128,29 +187,7 @@ namespace PlaylistEditor
 
         static void writexml(Game game)//String filename, String title)
         {
-            //"C:\Users\Jaime\.emulationstation\gamelists\mame\gamelist.xml"
-            //"gamelists\\mame\\gamelist.xml"
-            String filepath = Directory.GetCurrentDirectory() + "\\gamelist.xml"; // @"C:\Users\Jaime\.emulationstation\gamelists\mame\gamelist.xml";
-
-            //                <game>
-            //        <path>C:/Users/Jaime/.emulationstation/roms/mame-libretro/sf/sf2049.zip</path>
-            //        <name>San Francisco Rush 2049</name>
-            //        <desc>San Francisco Rush 2049 is the third game in the Rush series, sequel to San Francisco Rush and Rush 2: Extreme Racing USA.
-            //The game features a futuristic representation of San Francisco and an arcade-style physics engine. It also features a multiplayer mode for up to four players and Rumble Pak support on the Nintendo 64 port. A major difference in game play compared to predecessors in the series is the ability to extend wings from the cars in midair and glide. As with previous titles in the franchise, Rush 2049 features a stunt mode in which the player scores points for complex mid-air maneuvers and successful landings. There is also a multiplayer deathmatch battle mode. There are six race tracks, four stunt arenas, eight battle arenas, and one unlockable obstacle course named The Gauntlet. The single player race mode places emphasis on outlandish and death-defying shortcuts in each track. The game has a soundtrack mostly comprising techno music.</desc>
-            //        <image>~/.emulationstation/downloaded_images/mame/sf2049-image.jpg</image>
-            //        <releasedate>20000906T000000</releasedate>
-            //        <developer>Midway</developer>
-            //        <publisher>Midway</publisher>
-            //        <genre>Racing</genre>
-            //        <players>4+</players>
-            //        <rating>0.5</rating>
-            //    </game>
-
-            string imagepath = getimage("", game.path);
-            if (imagepath != "")
-            {
-                game.image  = "~/.emulationstation/downloaded_images/" + imagepath;
-            }
+            String filepath = Directory.GetCurrentDirectory() + "\\gamelist.xml"; 
 
             if (File.Exists(filepath) == false)
             {
@@ -200,10 +237,6 @@ namespace PlaylistEditor
                     new XElement("genre", game.genre),
                     new XElement("players", game.players),
                     new XElement("rating", game.rating)));
-                //firstRow.AddBeforeSelf(
-                //new XElement("Student",
-                //new XElement("FirstName", firstName),
-                //new XElement("LastName", lastName)));
                 xDocument.Save(filepath);
             }
         }
@@ -318,86 +351,96 @@ namespace PlaylistEditor
         static Game getDetails(string inHtml)
         {
             Game game = new Game();
-            String Detail = "";
-            String DetailMarkerStart = "<h1>Game Details</h1><br/>";
-            String DetailMarkerEnd = "</td>";
-            Int32 respLength = inHtml.Length;
-            Int32 detailStPos = inHtml.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
+            try 
+            { 
+                
+                String Detail = "";
+                String DetailMarkerStart = "<h1>Game Details</h1><br/>";
+                String DetailMarkerEnd = "</td>";
+                Int32 respLength = inHtml.Length;
+                Int32 detailStPos = inHtml.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
+                if (inHtml.IndexOf(DetailMarkerStart) > 0)
+                {
+                    Int32 detailEndPos = detailStPos;
+                    while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
+                    {
+                        detailEndPos++;
+                    }
 
-            Int32 detailEndPos = detailStPos;
-            while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
-            {
-                detailEndPos++;
+                    //Int32 detailEndPos = inHtml.IndexOf(DetailMarkerEnd);
+                    if (detailStPos < detailEndPos)
+                    {
+                        Int32 titleLength = detailEndPos - detailStPos;
+                        Detail = inHtml.Substring(detailStPos, titleLength);
+
+                        //Int32 detailEndPos = detailStPos;
+                        //while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
+                        //{
+                        //    detailEndPos++;
+                        //}
+                        string[] Detaildata = Detail.Replace("<br/>", "|").Replace("<b>", "").Replace("&nbsp;</b>", "").Replace("&nbsp</b>", "").Split('|');
+                        string ManufMarkerStart = "<b>Manufacturer:&nbsp</b> <a href='/manufacturer/";
+                        string ManufMarkerEnd = "</td>";
+                        string manufacturer = Detail.Substring(Detail.IndexOf(ManufMarkerStart) + ManufMarkerStart.Length, 5);
+                        //game.developer = manufacturer;
+                    }
+
+                    //http://www.mamedb.com/game/64streetj
+                    //<h1>Game Details</h1><br>
+                    //<b>Name:&nbsp;</b>64th. Street - A Detective Story (Japan) &nbsp;(clone of: <a href="/game/64street">64street</a>)&nbsp;<br>
+                    //<b>Year:&nbsp;</b> <a href="/year/1991">1991</a><br>
+                    //<b>Manufacturer:&nbsp;</b> <a href="/manufacturer/Jaleco">Jaleco</a><br>
+                    //<b>Filename:&nbsp;</b>64streetj<br>
+                    //<b>Status:&nbsp;</b>good<br>
+                    //<b>Emulation:&nbsp;</b>good<br>
+                    //<b>Color:&nbsp;</b>good<br>
+                    //<b>Sound:&nbsp;</b>good<br>
+                    //<b>Graphic:&nbsp;</b>good<br>
+                    //<b>Palette Size:&nbsp;</b>1024</td>
+
+                    //http://www.arcade-museum.com/results.php
+                    //q=Alex+Kidd+the+lost+stars&boolean=AND&search_desc=%3D%220%22&type=
+                    //<a href="game_detail.php?game_id=6845">Alex Kidd: The Lost Stars</a>
+                    //http://www.arcade-museum.com/game_detail.php?game_id=6845
+
+                    //http://thegamesdb.net/api/GetGame.php?name=alex%20kidd%20the%20lost%20stars&platform=arcade
+                    //<Game>
+                    //<id>16790</id>
+                    //<GameTitle>Alex Kidd: The Lost Stars</GameTitle>
+                    //<PlatformId>23</PlatformId>
+                    //<Platform>Arcade</Platform>
+                    //<Overview>
+                    //Alex Kidd: The Lost Stars features Alex Kidd and Stella searching for the twelve Zodiac signs.
+                    //</Overview>
+                    //<Genres>
+                    //<genre>Platform</genre>
+                    //</Genres>
+                    //<Players>1</Players>
+                    //<Co-op>No</Co-op>
+                    //<Publisher>Sega</Publisher>
+                    //<Developer>Sega</Developer>
+                    //<Similar>
+                    //<SimilarCount>1</SimilarCount>
+                    //<Game>
+                    //<id>5498</id>
+                    //<PlatformId>35</PlatformId>
+                    //</Game>
+                    //</Similar>
+                    //<Images>
+                    //<boxart side="front" width="501" height="700" thumb="boxart/thumb/original/front/16790-1.jpg">boxart/original/front/16790-1.jpg</boxart>
+                    //<screenshot>
+                    //<original width="320" height="224">screenshots/16790-1.jpg</original>
+                    //<thumb>screenshots/thumb/16790-1.jpg</thumb>
+                    //</screenshot>
+                    //</Images>
+                    //</Game>
+                }
+
             }
-
-            //Int32 detailEndPos = inHtml.IndexOf(DetailMarkerEnd);
-            if (detailStPos < detailEndPos)
+            catch (System.Exception excpt)
             {
-                Int32 titleLength = detailEndPos - detailStPos;
-                Detail = inHtml.Substring(detailStPos, titleLength);
-
-                //Int32 detailEndPos = detailStPos;
-                //while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
-                //{
-                //    detailEndPos++;
-                //}
-                string[] Detaildata = Detail.Replace("<br/>", "|").Replace("<b>", "").Replace("&nbsp;</b>", "").Replace("&nbsp</b>", "").Split('|');
-                string ManufMarkerStart = "<b>Manufacturer:&nbsp</b> <a href='/manufacturer/";
-                string ManufMarkerEnd = "</td>";
-                string manufacturer = Detail.Substring(Detail.IndexOf(ManufMarkerStart) + ManufMarkerStart.Length, 5);
-                //game.developer = manufacturer;
+                Console.WriteLine(excpt.Message);
             }
-
-            //http://www.mamedb.com/game/64streetj
-            //<h1>Game Details</h1><br>
-            //<b>Name:&nbsp;</b>64th. Street - A Detective Story (Japan) &nbsp;(clone of: <a href="/game/64street">64street</a>)&nbsp;<br>
-            //<b>Year:&nbsp;</b> <a href="/year/1991">1991</a><br>
-            //<b>Manufacturer:&nbsp;</b> <a href="/manufacturer/Jaleco">Jaleco</a><br>
-            //<b>Filename:&nbsp;</b>64streetj<br>
-            //<b>Status:&nbsp;</b>good<br>
-            //<b>Emulation:&nbsp;</b>good<br>
-            //<b>Color:&nbsp;</b>good<br>
-            //<b>Sound:&nbsp;</b>good<br>
-            //<b>Graphic:&nbsp;</b>good<br>
-            //<b>Palette Size:&nbsp;</b>1024</td>
-
-            //http://www.arcade-museum.com/results.php
-            //q=Alex+Kidd+the+lost+stars&boolean=AND&search_desc=%3D%220%22&type=
-            //<a href="game_detail.php?game_id=6845">Alex Kidd: The Lost Stars</a>
-            //http://www.arcade-museum.com/game_detail.php?game_id=6845
-        
-        //http://thegamesdb.net/api/GetGame.php?name=alex%20kidd%20the%20lost%20stars&platform=arcade
-            //<Game>
-            //<id>16790</id>
-            //<GameTitle>Alex Kidd: The Lost Stars</GameTitle>
-            //<PlatformId>23</PlatformId>
-            //<Platform>Arcade</Platform>
-            //<Overview>
-            //Alex Kidd: The Lost Stars features Alex Kidd and Stella searching for the twelve Zodiac signs.
-            //</Overview>
-            //<Genres>
-            //<genre>Platform</genre>
-            //</Genres>
-            //<Players>1</Players>
-            //<Co-op>No</Co-op>
-            //<Publisher>Sega</Publisher>
-            //<Developer>Sega</Developer>
-            //<Similar>
-            //<SimilarCount>1</SimilarCount>
-            //<Game>
-            //<id>5498</id>
-            //<PlatformId>35</PlatformId>
-            //</Game>
-            //</Similar>
-            //<Images>
-            //<boxart side="front" width="501" height="700" thumb="boxart/thumb/original/front/16790-1.jpg">boxart/original/front/16790-1.jpg</boxart>
-            //<screenshot>
-            //<original width="320" height="224">screenshots/16790-1.jpg</original>
-            //<thumb>screenshots/thumb/16790-1.jpg</thumb>
-            //</screenshot>
-            //</Images>
-            //</Game>
-
             return game;
         }
 
@@ -421,47 +464,64 @@ namespace PlaylistEditor
 
                 String ScrapeResponse = HttpPost("http://www.arcade-museum.com/results.php","q="+ HttpUtility.UrlEncode(gameName)+"&boolean=AND&search_desc=%3D%220%22&type=");
 
-                string Description = "";
-                String GameID = "";
-                String GameDetailResponse = "";
-                string gameidMarkerEnd = "\">" + gameName.ToUpper() + "</A>";
-                Int32 gameidEndPos = ScrapeResponse.ToUpper().IndexOf(gameidMarkerEnd) + gameidMarkerEnd.Length;
-                Int32 gameidStPos = gameidEndPos;
-                if (gameidEndPos > gameidMarkerEnd.Length)
+                if (ScrapeResponse.Length > 0)
                 {
-                    while (ScrapeResponse.Substring(gameidStPos, 1) != "=")
+                    string Description = "";
+                    String GameID = "";
+                    String GameDetailResponse = "";
+                    string gameidMarkerEnd = "\">" + gameName.ToUpper() + "</A>";
+                    Int32 gameidEndPos = ScrapeResponse.ToUpper().IndexOf(gameidMarkerEnd) + gameidMarkerEnd.Length;
+                    Int32 gameidStPos = gameidEndPos;
+                    if (gameidEndPos > gameidMarkerEnd.Length)
                     {
-                        gameidStPos--;
-                    }
-
-                    if (gameidStPos < gameidEndPos)
-                    {
-                        Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
-                        GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
-
-                        GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
-
-                    
-                        String DescMarkerStart = "Description</H2>";
-                        String DescMarkerEnd = "<p>";
-                        Int32 respLength = GameDetailResponse.Length;
-                        Int32 descStPos = GameDetailResponse.IndexOf(DescMarkerStart) + DescMarkerStart.Length;
-
-                        Int32 descEndPos = descStPos;
-                        while (GameDetailResponse.Substring(descEndPos, 3) != DescMarkerEnd)
+                        while (ScrapeResponse.Substring(gameidStPos, 1) != "=")
                         {
-                            descEndPos++;
+                            gameidStPos--;
                         }
 
-                        if (descStPos < descEndPos)
+                        if (gameidStPos < gameidEndPos)
                         {
-                            Int32 DescLength = descEndPos - descStPos;
-                            Description = GameDetailResponse.Substring(descStPos, DescLength);
+                            Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
+                            GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
+
+                            GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
+
+                            Description = ScrapeValue("Description</H2>", "<p>", GameDetailResponse);
+
+                            if (game.image == null)
+                            {
+                                string img = ScrapeValue("Title screen image", ".png", GameDetailResponse);
+                                img = img.Substring(img.IndexOf("images/"));
+                                string imagepath = SaveImage("http://www.arcade-museum.com/" + img + ".png", Path.GetFileNameWithoutExtension(game.path));
+                                if (imagepath != "")
+                                {
+                                    game.image = "~/.emulationstation/downloaded_images/" + imagepath;
+                                }
+                                //title image
+                                //<img alt="Makyou Senshi - Title screen image" src="/images/118/11812421378.png" width="240" height="256">
+                            }
+
+                            //String DescMarkerStart = "Description</H2>";
+                            //String DescMarkerEnd = "<p>";
+                            //Int32 respLength = GameDetailResponse.Length;
+                            //Int32 descStPos = GameDetailResponse.IndexOf(DescMarkerStart) + DescMarkerStart.Length;
+
+                            //Int32 descEndPos = descStPos;
+                            //while (GameDetailResponse.Substring(descEndPos, 3) != DescMarkerEnd)
+                            //{
+                            //    descEndPos++;
+                            //}
+
+                            //if (descStPos < descEndPos)
+                            //{
+                            //    Int32 DescLength = descEndPos - descStPos;
+                            //    Description = GameDetailResponse.Substring(descStPos, DescLength);
+                            //}
                         }
                     }
+
+                    game.desc = Description;
                 }
-        
-                game.desc = Description;
 
             }
             catch (System.Exception excpt)
@@ -469,6 +529,85 @@ namespace PlaylistEditor
                 Console.WriteLine(excpt.Message);
             }
             return game;
+        }
+
+        public static string ScrapeValue(string MarkerStart, string MarkerEnd, string inHtml)
+        {
+            Int32 respLength = inHtml.Length;
+            Int32 descStPos = inHtml.IndexOf(MarkerStart) + MarkerStart.Length;
+
+            Int32 descEndPos = descStPos;
+            while (inHtml.Substring(descEndPos, MarkerEnd.Length) != MarkerEnd)
+            {
+                descEndPos++;
+            }
+
+            if (descStPos < descEndPos)
+            {
+                Int32 DescLength = descEndPos - descStPos;
+                return inHtml.Substring(descStPos, DescLength);
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        public static string SaveImage(string sourceFilePath, string savefileName)
+        {
+            try
+            {
+                string foundpath = "";
+
+                if (Directory.Exists("mame") == false)
+                {
+                    Directory.CreateDirectory("mame");
+                }
+
+                HttpWebRequest lxRequest = (HttpWebRequest)WebRequest.Create(sourceFilePath);
+                lxRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+
+                using (HttpWebResponse lxResponse = (HttpWebResponse)lxRequest.GetResponse()){
+                   using (BinaryReader reader = new BinaryReader(lxResponse.GetResponseStream())) {
+                      Byte[] data = reader.ReadBytes(1 * 1024 * 1024 * 10);
+                      if (data.Length > 0)
+                      {
+                          using (MemoryStream mem = new MemoryStream(data))
+                          {
+                              var yourImage = Image.FromStream(mem);
+
+                              foundpath = "mame/" + savefileName + "-image.png";
+                              yourImage.Save(foundpath, ImageFormat.Png);
+                          }
+                      }
+                      //using (FileStream lxFS = new FileStream("34891.jpg", FileMode.Create)) {
+                      //    lxFS.Write(lnByte, 0, lnByte.Length);
+                      //}
+                   }
+                }
+
+                //using (WebClient webClient = new WebClient())
+                //{
+
+                //    byte[] data = webClient.DownloadData(sourceFilePath);
+
+                //    if (data.Length > 0)
+                //    {
+                //        using (MemoryStream mem = new MemoryStream(data))
+                //        {
+                //            var yourImage = Image.FromStream(mem);
+
+                //            foundpath = "mame/" + savefileName + "-image.png";
+                //            yourImage.Save(foundpath, ImageFormat.Png);
+                //        }
+                //    }
+                //}
+                return foundpath;
+            }
+            catch (Exception ex)
+            {
+                return "";
+            }
         }
 
         public static string HttpPostSimple(string URI, NameValueCollection parameters)
@@ -559,6 +698,7 @@ namespace PlaylistEditor
                 new Uri(goodUrl),//"https://www.sefaz.rr.gov.br/"),
                 misplacedCookie.ToString());
         }
+
     }
 
 }
