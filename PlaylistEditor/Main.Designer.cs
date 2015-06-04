@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.button1 = new System.Windows.Forms.Button();
             this.btnGetGameDetails = new System.Windows.Forms.Button();
             this.GameNameBox = new System.Windows.Forms.TextBox();
@@ -96,8 +97,9 @@
             this.Controls.Add(this.GameNameBox);
             this.Controls.Add(this.btnGetGameDetails);
             this.Controls.Add(this.button1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Main";
-            this.Text = "MAME Playlist Editor - Scraper";
+            this.Text = "MAME Playlist Scraper";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -14,7 +14,7 @@ namespace PlaylistEditor
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Main());
+            Application.Run(new FormsContainer());
         }
     }
 }
