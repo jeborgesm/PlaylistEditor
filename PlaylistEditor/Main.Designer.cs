@@ -32,8 +32,7 @@
             this.btnGetGameDetails = new System.Windows.Forms.Button();
             this.GameNameBox = new System.Windows.Forms.TextBox();
             this.ResultsBox = new System.Windows.Forms.TextBox();
-            this.ProcessProgress = new System.Windows.Forms.ProgressBar();
-            this.ProgressStatus = new System.Windows.Forms.Label();
+            this.ProcessProgress = new PlaylistEditor.ProgressBarWithCaption();
             this.SuspendLayout();
             // 
             // button1
@@ -79,31 +78,19 @@
             // 
             // ProcessProgress
             // 
+            this.ProcessProgress.CustomText = null;
+            this.ProcessProgress.DisplayStyle = PlaylistEditor.ProgressBarDisplayText.CustomText;
             this.ProcessProgress.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.ProcessProgress.Location = new System.Drawing.Point(0, 679);
             this.ProcessProgress.Name = "ProcessProgress";
             this.ProcessProgress.Size = new System.Drawing.Size(721, 23);
-            this.ProcessProgress.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.ProcessProgress.TabIndex = 5;
-            // 
-            // ProgressStatus
-            // 
-            this.ProgressStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.ProgressStatus.AutoSize = true;
-            this.ProgressStatus.BackColor = System.Drawing.Color.Transparent;
-            this.ProgressStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ProgressStatus.Location = new System.Drawing.Point(274, 684);
-            this.ProgressStatus.Name = "ProgressStatus";
-            this.ProgressStatus.Size = new System.Drawing.Size(0, 17);
-            this.ProgressStatus.TabIndex = 6;
-            this.ProgressStatus.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(721, 702);
-            this.Controls.Add(this.ProgressStatus);
             this.Controls.Add(this.ProcessProgress);
             this.Controls.Add(this.ResultsBox);
             this.Controls.Add(this.GameNameBox);
@@ -123,8 +110,7 @@
         private System.Windows.Forms.Button btnGetGameDetails;
         private System.Windows.Forms.TextBox GameNameBox;
         private System.Windows.Forms.TextBox ResultsBox;
-        private System.Windows.Forms.ProgressBar ProcessProgress;
-        private System.Windows.Forms.Label ProgressStatus;
+        private ProgressBarWithCaption ProcessProgress;
     }
 }
 

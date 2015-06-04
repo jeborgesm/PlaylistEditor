@@ -127,14 +127,10 @@ namespace PlaylistEditor
                         delegate
                         {
                             //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
+                            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
                             ProcessProgress.Value++;
                         });
 
-                        ProgressStatus.Invoke((MethodInvoker)
-                        delegate
-                        {
-                            ProgressStatus.Text = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
-                        });
                     }
                 }
                 DirSearch(d);
