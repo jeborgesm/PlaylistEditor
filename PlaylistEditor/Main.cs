@@ -1,10 +1,10 @@
-﻿using System;
+﻿using PlaylistEditor.Properties;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-
 
 namespace PlaylistEditor
 {
@@ -49,6 +49,18 @@ namespace PlaylistEditor
             stopProcess = true;
         }
 
+        private void btnGetGameDetails_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ResultsBox.Text += ScrapeHandler.getDetailsArcadeMuseum(this.GameNameBox.Text, new Game()).desc + Environment.NewLine;
+            }
+            catch (System.Exception excpt)
+            {
+                ResultsBox.Text += excpt.Message + Environment.NewLine;
+            }
+        }
+
         private void SetStatus(string status)
         {
             ToolStripStatusLabel statusStrip = ((FormsContainer)(this.MdiParent)).toolStripStatusLabel;
@@ -61,39 +73,28 @@ namespace PlaylistEditor
             {
                 //foreach (string d in Directory.GetDirectories(@"C:\Users\Jaime\.emulationstation\roms\mame"))
                 //{
-                string d = @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
+                string d = Settings.Default.MAME_Roms_Directory; // @"C:\Users\Jaime\.emulationstation\roms\mame-libretro";
                 //string d = @"C:\Users\Jaime\.emulationstation\roms\mame-mame4all";
 
                 int fileCount = Directory.GetFiles(d).Count();
                 int filesProcessed = 0;
 
-                ProcessProgress.Invoke((MethodInvoker)
-                    delegate {ProcessProgress.Value = 0; ProcessProgress.Maximum = fileCount;});
+                ProcessProgress.Invoke((MethodInvoker)delegate 
+                    {ProcessProgress.Value = 0; ProcessProgress.Maximum = fileCount;});
 
-                ResultsBox.Invoke((MethodInvoker)
-                    delegate {ResultsBox.Text = ""; });
+                ResultsBox.Invoke((MethodInvoker)delegate
+                     {ResultsBox.Text = ""; });
                 
                 foreach (string f in Directory.GetFiles(d))
                 {
                     if (stopProcess) { //If process is ordered to Stop loop is finished
                         SetStatus("Process END! - GAME OVER");
-                        ////Refresh the Results Box by invoking it on the main window thread
-                        //ResultsBox.Invoke(
-                        //    (MethodInvoker)
-                        //    delegate
-                        //    {
-                                
-                        //        ResultsBox.SelectionStart = ResultsBox.Text.Length;
-                        //        ResultsBox.ScrollToCaret();
-                        //    }
-                        //);
                         break; 
                     } 
 
                     Debug.WriteLine(f);
                     String ScrapeResponse = HTTPHandler.HttpGet("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
 
-                    String Title = "";
                     if (ScrapeResponse != "")
                     {
                         Game game = ScrapeHandler.getDetails(ScrapeResponse);
@@ -132,19 +133,15 @@ namespace PlaylistEditor
                         XMLHandler.writexml(game);
 
                         //Refresh the Results Box by invoking it on the main window thread
-                        ResultsBox.Invoke(
-                            (MethodInvoker)
-                            delegate
-                            {  
-                                ResultsBox.Text += game.name + " - " + game.desc + Environment.NewLine;
-                                ResultsBox.SelectionStart = ResultsBox.Text.Length;
-                                ResultsBox.ScrollToCaret();
-                            }
-                        );
+                        ResultsBox.Invoke((MethodInvoker)delegate
+                        {  
+                            ResultsBox.Text += game.name + " - " + game.desc + Environment.NewLine;
+                            ResultsBox.SelectionStart = ResultsBox.Text.Length;
+                            ResultsBox.ScrollToCaret();
+                        });
 
                         filesProcessed++;
-                        ProcessProgress.Invoke((MethodInvoker)
-                        delegate
+                        ProcessProgress.Invoke((MethodInvoker)delegate
                         {
                             //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
                             ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " +  game.name;
@@ -173,17 +170,6 @@ namespace PlaylistEditor
             }
         }
 
-        private void btnGetGameDetails_Click(object sender, EventArgs e)
-        {
-            try {
-                ResultsBox.Text += ScrapeHandler.getDetailsArcadeMuseum(this.GameNameBox.Text, new Game()).desc + Environment.NewLine;
-            }
-            catch (System.Exception excpt)
-            {
-                ResultsBox.Text += excpt.Message + Environment.NewLine;
-            }
-        }
-
         static void DirSearch(string sDir)
         {
             try
@@ -202,20 +188,6 @@ namespace PlaylistEditor
                 Console.WriteLine(excpt.Message);
             }
         }
-
-        //private void ThreadDelegate(Control obj)
-        //{
-        //    obj.Invoke((MethodInvoker)
-        //        delegate
-        //        {
-        //            //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
-        //            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
-        //            ProcessProgress.Value++;
-        //        });
-        //}
-
-
-
 
     }
 

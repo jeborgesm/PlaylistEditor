@@ -33,7 +33,7 @@
             this.btnGetGameDetails = new System.Windows.Forms.Button();
             this.GameNameBox = new System.Windows.Forms.TextBox();
             this.ResultsBox = new System.Windows.Forms.TextBox();
-            this.ProcessProgress = new PlaylistEditor.ProgressBarWithCaption();
+            this.ProcessProgress = new ProgressBarWithCaption();
             this.btnStop = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -87,7 +87,7 @@
             // ProcessProgress
             // 
             this.ProcessProgress.CustomText = null;
-            this.ProcessProgress.DisplayStyle = PlaylistEditor.ProgressBarDisplayText.CustomText;
+            this.ProcessProgress.DisplayStyle = ProgressBarDisplayText.CustomText;
             this.ProcessProgress.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.ProcessProgress.Location = new System.Drawing.Point(0, 679);
             this.ProcessProgress.Name = "ProcessProgress";

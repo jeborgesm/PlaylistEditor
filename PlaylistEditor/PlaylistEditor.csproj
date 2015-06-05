@@ -78,6 +78,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
@@ -88,6 +89,12 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormsContainer.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -105,7 +112,11 @@
     <Compile Include="Objects\Program.cs" />
     <Compile Include="Objects\ScrapeHandler.cs" />
     <Compile Include="Objects\XMLHandler.cs" />
+    <Compile Include="PlaylistEditor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="AboutBox.resx">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormsContainer.resx">
       <DependentUpon>FormsContainer.cs</DependentUpon>
     </EmbeddedResource>
@@ -135,7 +146,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\ProgressBarWithCaption\ProgressBarWithCaption.csproj">
+      <Project>{6c521975-cd15-4c59-a720-2dbb7f52c3aa}</Project>
+      <Name>ProgressBarWithCaption</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
@@ -147,12 +163,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ProgressBarWithCaption\ProgressBarWithCaption.csproj">
-      <Project>{6c521975-cd15-4c59-a720-2dbb7f52c3aa}</Project>
-      <Name>ProgressBarWithCaption</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\QuestionCoin.ico" />

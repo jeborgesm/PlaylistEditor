@@ -22,5 +22,17 @@ namespace PlaylistEditor.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Users\\Jaime\\.emulationstation\\roms\\mame-libretro")]
+        public string MAME_Roms_Directory {
+            get {
+                return ((string)(this["MAME_Roms_Directory"]));
+            }
+            set {
+                this["MAME_Roms_Directory"] = value;
+            }
+        }
     }
 }

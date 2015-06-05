@@ -119,5 +119,11 @@ namespace PlaylistEditor
                 this.MainMenuStrip.Items[0].Image = bmp;
             }
         }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var about = new AboutBox();
+            about.ShowDialog(this);
+        }
     }
 }
