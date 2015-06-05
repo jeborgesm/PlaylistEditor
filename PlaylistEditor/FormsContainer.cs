@@ -122,8 +122,15 @@ namespace PlaylistEditor
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var about = new AboutBox();
+            AboutBox about = new AboutBox();
             about.ShowDialog(this);
+        }
+
+        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Options options = new Options();
+            options.ShowDialog(this);
+
         }
     }
 }

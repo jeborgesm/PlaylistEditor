@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PlaylistEditor.Properties;
+using System;
 using System.Collections.Specialized;
 using System.IO;
 using System.Net;
@@ -17,7 +18,7 @@ namespace PlaylistEditor
 
                 // Create a new 'HttpWebRequest' object to the mentioned URL.
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+                req.UserAgent = Settings.Default.UserAgent;//"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
                 //req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
                 System.Net.WebResponse resp = req.GetResponse();
@@ -35,7 +36,7 @@ namespace PlaylistEditor
             //String ProxyString = "";
             //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
-            req.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+            req.UserAgent = Settings.Default.UserAgent;// "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
             //req.Proxy = new System.Net.WebProxy(ProxyString, true);
             //Add these, as we're doing a POST
@@ -69,30 +70,21 @@ namespace PlaylistEditor
         public static string Crawl(string rootUrl, string Url, string postParameters)
         {
             var cookieContainer = new CookieContainer();
-            //string test =  HttpGet(rootUrl);
             /* initial GET Request */
-            //var getRequest = (HttpWebRequest)WebRequest.Create(rootUrl);
-
             HttpWebRequest getRequest = (HttpWebRequest)WebRequest.Create(Url);
-            getRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+            getRequest.UserAgent = Settings.Default.UserAgent;//"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
             getRequest.CookieContainer = cookieContainer;
             ReadResponse(getRequest); // nothing to do with this, because captcha is f#@%ing dumb :)
 
             /* POST Request */
-            //var postRequest = (HttpWebRequest)WebRequest.Create(Url);
             HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create(Url);
-            postRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+            postRequest.UserAgent = Settings.Default.UserAgent;//"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
             postRequest.AllowAutoRedirect = false; // we'll do the redirect manually; .NET does it badly
             postRequest.CookieContainer = cookieContainer;
             postRequest.Method = "POST";
             postRequest.ContentType = "application/x-www-form-urlencoded";
-
-            //var postParameters =
-            //    "_EventName=E%27CONFIRMAR%27.&_EventGridId=&_EventRowId=&_MSG=&_CONINSEST=&" +
-            //    "_CONINSESTG=08775724000119&cfield=much&_VALIDATIONRESULT=1&BUTTON1=Confirmar&" +
-            //    "sCallerURL=";
 
             var bytes = Encoding.UTF8.GetBytes(postParameters);
 
@@ -134,11 +126,11 @@ namespace PlaylistEditor
         {
             var misplacedCookie = cookieContainer.GetCookies(new Uri(Url))[0];
 
-            misplacedCookie.Path = "/"; // instead of "/sintegra/servlet/hwsintco"
+            misplacedCookie.Path = "/"; 
 
             //place the cookie in thee right place...
             cookieContainer.SetCookies(
-                new Uri(goodUrl),//"https://www.sefaz.rr.gov.br/"),
+                new Uri(goodUrl),
                 misplacedCookie.ToString());
         }
 

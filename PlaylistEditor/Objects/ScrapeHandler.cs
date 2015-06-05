@@ -260,15 +260,23 @@ namespace PlaylistEditor
             Int32 descStPos = inHtml.IndexOf(MarkerStart) + MarkerStart.Length;
 
             Int32 descEndPos = descStPos;
-            while (inHtml.Substring(descEndPos, MarkerEnd.Length) != MarkerEnd)
-            {
-                descEndPos++;
-            }
 
-            if (descStPos < descEndPos)
+            if (descEndPos < respLength)
             {
-                Int32 DescLength = descEndPos - descStPos;
-                return inHtml.Substring(descStPos, DescLength);
+                while (inHtml.Substring(descEndPos, MarkerEnd.Length) != MarkerEnd)
+                {
+                    descEndPos++;
+                }
+
+                if (descStPos < descEndPos)
+                {
+                    Int32 DescLength = descEndPos - descStPos;
+                    return inHtml.Substring(descStPos, DescLength);
+                }
+                else
+                {
+                    return "";
+                }
             }
             else
             {
