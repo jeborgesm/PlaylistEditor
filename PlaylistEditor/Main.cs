@@ -1,25 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
-using System.Net;
-using System.Web;
-using System.Xml;
-using System.Xml.Linq;
 using System.Diagnostics;
-using System.Drawing.Imaging;
-using System.Collections.Specialized;
-using System.Text;
+using System.IO;
+using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 
 
 namespace PlaylistEditor
 {
     public partial class Main : Form
     {
-
+        static bool stopProcess = false;
 
         public Main()
         {
@@ -29,9 +20,12 @@ namespace PlaylistEditor
         private void Form1_Load(object sender, EventArgs e)
         { }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnUpdate_Click(object sender, EventArgs e)
         {
-            try { 
+            try {
+                stopProcess = false;
+                SetStatus("Process START!");
+
                 //Create a new Thread start object passing the method to be started
                 ThreadStart oThreadStart = new ThreadStart(this.DoWork);
 
@@ -48,6 +42,17 @@ namespace PlaylistEditor
             {
                 ResultsBox.Text += excpt.Message + Environment.NewLine;
             }
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            stopProcess = true;
+        }
+
+        private void SetStatus(string status)
+        {
+            ToolStripStatusLabel statusStrip = ((FormsContainer)(this.MdiParent)).toolStripStatusLabel;
+            statusStrip.Text = status;
         }
 
         private void DoWork()
@@ -70,13 +75,28 @@ namespace PlaylistEditor
                 
                 foreach (string f in Directory.GetFiles(d))
                 {
+                    if (stopProcess) { //If process is ordered to Stop loop is finished
+                        SetStatus("Process END! - GAME OVER");
+                        ////Refresh the Results Box by invoking it on the main window thread
+                        //ResultsBox.Invoke(
+                        //    (MethodInvoker)
+                        //    delegate
+                        //    {
+                                
+                        //        ResultsBox.SelectionStart = ResultsBox.Text.Length;
+                        //        ResultsBox.ScrollToCaret();
+                        //    }
+                        //);
+                        break; 
+                    } 
+
                     Debug.WriteLine(f);
-                    String ScrapeResponse = HttpGet("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
+                    String ScrapeResponse = HTTPHandler.HttpGet("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
 
                     String Title = "";
                     if (ScrapeResponse != "")
                     {
-                        Game game = getDetails(ScrapeResponse);
+                        Game game = ScrapeHandler.getDetails(ScrapeResponse);
                         game.path = "./" + Path.GetFileName(f);
 
                         String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
@@ -100,16 +120,16 @@ namespace PlaylistEditor
                                 cleanName = game.name.Replace(":", "");
                             }
 
-                            string imagepath = getimage("", game.path);
+                            string imagepath = ScrapeHandler.getimage("", game.path);
                             if (imagepath != "")
                             {
                                 game.image = "~/.emulationstation/downloaded_images/" + imagepath;
                             }
 
-                            game = getDetailsArcadeMuseum(cleanName, game);
+                            game = ScrapeHandler.getDetailsArcadeMuseum(cleanName, game);
                         }
                        
-                        writexml(game);
+                        XMLHandler.writexml(game);
 
                         //Refresh the Results Box by invoking it on the main window thread
                         ResultsBox.Invoke(
@@ -127,12 +147,14 @@ namespace PlaylistEditor
                         delegate
                         {
                             //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
-                            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
+                            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " +  game.name;
                             ProcessProgress.Value++;
                         });
 
+                        SetStatus("File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name);
                     }
                 }
+
                 DirSearch(d);
 
                 //Join the thread
@@ -153,8 +175,8 @@ namespace PlaylistEditor
 
         private void btnGetGameDetails_Click(object sender, EventArgs e)
         {
-            try { 
-                ResultsBox.Text += getDetailsArcadeMuseum(this.GameNameBox.Text, new Game()).desc + Environment.NewLine;
+            try {
+                ResultsBox.Text += ScrapeHandler.getDetailsArcadeMuseum(this.GameNameBox.Text, new Game()).desc + Environment.NewLine;
             }
             catch (System.Exception excpt)
             {
@@ -181,519 +203,19 @@ namespace PlaylistEditor
             }
         }
 
-        static void writexml(Game game)//String filename, String title)
-        {
-            String filepath = Directory.GetCurrentDirectory() + "\\gamelist.xml"; 
+        //private void ThreadDelegate(Control obj)
+        //{
+        //    obj.Invoke((MethodInvoker)
+        //        delegate
+        //        {
+        //            //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
+        //            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
+        //            ProcessProgress.Value++;
+        //        });
+        //}
 
-            if (File.Exists(filepath) == false)
-            {
-                XmlWriterSettings xmlWriterSettings = new XmlWriterSettings();
-                xmlWriterSettings.Indent = true;
-                xmlWriterSettings.NewLineOnAttributes = true;
-                using (XmlWriter xmlWriter = XmlWriter.Create(filepath, xmlWriterSettings))
-                {
-                    xmlWriter.WriteStartDocument();
-                    xmlWriter.WriteStartElement("gameList");
 
-                    xmlWriter.WriteStartElement("game");
-                    xmlWriter.WriteElementString("path", game.path);
-                    xmlWriter.WriteElementString("name", game.name);
-                    xmlWriter.WriteElementString("desc", game.desc);
-                    xmlWriter.WriteElementString("image", game.image);
-                    xmlWriter.WriteElementString("releasedate", game.releasedate);
-                    xmlWriter.WriteElementString("developer", game.developer);
-                    xmlWriter.WriteElementString("publisher", game.publisher);
-                    xmlWriter.WriteElementString("genre", game.genre);
-                    xmlWriter.WriteElementString("players", game.players);
-                    xmlWriter.WriteElementString("rating", game.rating);
-                    xmlWriter.WriteEndElement();
 
-                    xmlWriter.WriteEndElement();
-                    xmlWriter.WriteEndDocument();
-                    xmlWriter.Flush();
-                    xmlWriter.Close();
-                }
-            }
-            else
-            {
-                XDocument xDocument = XDocument.Load(filepath);
-                XElement root = xDocument.Element("gameList");
-                IEnumerable<XElement> rows = root.Descendants("game");
-                XElement lastRow = rows.Last();
-
-                lastRow.AddAfterSelf(
-                    new XElement("game",
-                    new XElement("path", game.path),
-                    new XElement("desc", game.desc),
-                    new XElement("name", game.name),
-                    new XElement("image", game.image),
-                    new XElement("releasedate", game.releasedate),
-                    new XElement("developer", game.developer),
-                    new XElement("publisher", game.publisher),
-                    new XElement("genre", game.genre),
-                    new XElement("players", game.players),
-                    new XElement("rating", game.rating)));
-                xDocument.Save(filepath);
-            }
-        }
-
-        public static string HttpGet(string URI)
-        {
-            try
-            {
-                //String ProxyString = "";
-                //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
-
-                // Create a new 'HttpWebRequest' object to the mentioned URL.
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
-                req.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-                //req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
-                System.Net.WebResponse resp = req.GetResponse();
-                System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
-                return sr.ReadToEnd().Trim();
-            }
-            catch(Exception ex)
-            {
-                return "";
-            }
-        }
-
-        public static string HttpPost(string URI, string Parameters)
-        {
-            //String ProxyString = "";
-            //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
-            req.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-            //req.Proxy = new System.Net.WebProxy(ProxyString, true);
-            //Add these, as we're doing a POST
-            req.ContentType = "application/x-www-form-urlencoded";
-            req.Method = "POST";
-            //We need to count how many bytes we're sending. Post'ed Faked Forms should be name=value&
-            byte[] bytes = System.Text.Encoding.ASCII.GetBytes(Parameters);
-            req.ContentLength = bytes.Length;
-            System.IO.Stream os = req.GetRequestStream();
-            os.Write(bytes, 0, bytes.Length); //Push it out there
-            os.Close();
-            System.Net.WebResponse resp = req.GetResponse();
-            if (resp == null) return null;
-            System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
-            return sr.ReadToEnd().Trim();
-        }
-
-        public static string getimage(string inHtml, string fileName)
-        {
-            fileName = Path.GetFileNameWithoutExtension(fileName);
-            try
-            {
-                string foundpath = "";
-
-                if (Directory.Exists("mame") == false)
-                {
-                    Directory.CreateDirectory("mame");
-                }
-
-                using (WebClient webClient = new WebClient()) 
-                {
-                    //http://www.mamedb.com/image/snap/64streetj
-                    //http://www.mamedb.com/image/title/64streetj
-                    //<tbody><tr><td><img src="/titles/64street.png" alt="Title Screen:  64th. Street - A Detective Story (Japan)"></td></tr><tr><td align="center">Title Screen</td></tr></tbody>
-
-                    //byte [] data = webClient.DownloadData("https://fbcdn-sphotos-h-a.akamaihd.net/hphotos-ak-xpf1/v/t34.0-12/10555140_10201501435212873_1318258071_n.jpg?oh=97ebc03895b7acee9aebbde7d6b002bf&oe=53C9ABB0&__gda__=1405685729_110e04e71d9");
-                    //byte[] data = webClient.DownloadData("http://www.mamedb.com/snap/" + fileName + ".png");
-                    byte[] data = webClient.DownloadData("http://www.mamedb.com/titles/" + fileName + ".png");
-                    //byte[] data = Convert.ToByte(HttpGet("http://www.mamedb.com/snap/" + Path.GetFileNameWithoutExtension(fileName) + ".png"));
-
-                    if (data.Length > 0)
-                    {
-                        using (MemoryStream mem = new MemoryStream(data))
-                        {
-                            var yourImage = Image.FromStream(mem);
-
-                            ///mame/sf2049-image.jpg/
-                            //if (yourImage.RawFormat == ImageFormat.Jpeg)
-                            //{
-                                // If you want it as Png
-                                foundpath = "mame/" + fileName + "-image.png";
-                                yourImage.Save(foundpath, ImageFormat.Png);
-                            //}
-                            //else if (yourImage.RawFormat == ImageFormat.Png)
-                            //{
-                            //    // If you want it as Jpeg
-                            //    foundpath = "mame/" + fileName + "-image.jpg";
-                            //    yourImage.Save(foundpath, ImageFormat.Jpeg);
-                            //}
-                        }
-                    }
-                }
-                return foundpath;
-            }
-            catch (Exception ex)
-            {
-                return "";
-            }
-        }
-
-        public void getRating(string inHtml)
-        {
-            //http://www.mamedb.com/game/64streetj
-    //        <td>	
-    //<h1>Rate This Game</h1>
-    //<b>Score:&nbsp;</b>7.04347826085 (115 votes)<br>	
-
-        }
-
-        static Game getDetails(string inHtml)
-        {
-            Game game = new Game();
-            try 
-            { 
-                
-                String Detail = "";
-                String DetailMarkerStart = "<h1>Game Details</h1><br/>";
-                String DetailMarkerEnd = "</td>";
-                Int32 respLength = inHtml.Length;
-                Int32 detailStPos = inHtml.IndexOf(DetailMarkerStart) + DetailMarkerStart.Length;
-                if (inHtml.IndexOf(DetailMarkerStart) > 0)
-                {
-                    Int32 detailEndPos = detailStPos;
-                    while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
-                    {
-                        detailEndPos++;
-                    }
-
-                    //Int32 detailEndPos = inHtml.IndexOf(DetailMarkerEnd);
-                    if (detailStPos < detailEndPos)
-                    {
-                        Int32 titleLength = detailEndPos - detailStPos;
-                        Detail = inHtml.Substring(detailStPos, titleLength);
-
-                        //Int32 detailEndPos = detailStPos;
-                        //while (inHtml.Substring(detailEndPos, 5) != DetailMarkerEnd)
-                        //{
-                        //    detailEndPos++;
-                        //}
-                        string[] Detaildata = Detail.Replace("<br/>", "|").Replace("<b>", "").Replace("&nbsp;</b>", "").Replace("&nbsp</b>", "").Split('|');
-                        string ManufMarkerStart = "<b>Manufacturer:&nbsp</b> <a href='/manufacturer/";
-                        string ManufMarkerEnd = "</td>";
-                        string manufacturer = Detail.Substring(Detail.IndexOf(ManufMarkerStart) + ManufMarkerStart.Length, 5);
-                        //game.developer = manufacturer;
-                    }
-
-                    //http://www.mamedb.com/game/64streetj
-                    //<h1>Game Details</h1><br>
-                    //<b>Name:&nbsp;</b>64th. Street - A Detective Story (Japan) &nbsp;(clone of: <a href="/game/64street">64street</a>)&nbsp;<br>
-                    //<b>Year:&nbsp;</b> <a href="/year/1991">1991</a><br>
-                    //<b>Manufacturer:&nbsp;</b> <a href="/manufacturer/Jaleco">Jaleco</a><br>
-                    //<b>Filename:&nbsp;</b>64streetj<br>
-                    //<b>Status:&nbsp;</b>good<br>
-                    //<b>Emulation:&nbsp;</b>good<br>
-                    //<b>Color:&nbsp;</b>good<br>
-                    //<b>Sound:&nbsp;</b>good<br>
-                    //<b>Graphic:&nbsp;</b>good<br>
-                    //<b>Palette Size:&nbsp;</b>1024</td>
-
-                    //http://www.arcade-museum.com/results.php
-                    //q=Alex+Kidd+the+lost+stars&boolean=AND&search_desc=%3D%220%22&type=
-                    //<a href="game_detail.php?game_id=6845">Alex Kidd: The Lost Stars</a>
-                    //http://www.arcade-museum.com/game_detail.php?game_id=6845
-
-                    //http://thegamesdb.net/api/GetGame.php?name=alex%20kidd%20the%20lost%20stars&platform=arcade
-                    //<Game>
-                    //<id>16790</id>
-                    //<GameTitle>Alex Kidd: The Lost Stars</GameTitle>
-                    //<PlatformId>23</PlatformId>
-                    //<Platform>Arcade</Platform>
-                    //<Overview>
-                    //Alex Kidd: The Lost Stars features Alex Kidd and Stella searching for the twelve Zodiac signs.
-                    //</Overview>
-                    //<Genres>
-                    //<genre>Platform</genre>
-                    //</Genres>
-                    //<Players>1</Players>
-                    //<Co-op>No</Co-op>
-                    //<Publisher>Sega</Publisher>
-                    //<Developer>Sega</Developer>
-                    //<Similar>
-                    //<SimilarCount>1</SimilarCount>
-                    //<Game>
-                    //<id>5498</id>
-                    //<PlatformId>35</PlatformId>
-                    //</Game>
-                    //</Similar>
-                    //<Images>
-                    //<boxart side="front" width="501" height="700" thumb="boxart/thumb/original/front/16790-1.jpg">boxart/original/front/16790-1.jpg</boxart>
-                    //<screenshot>
-                    //<original width="320" height="224">screenshots/16790-1.jpg</original>
-                    //<thumb>screenshots/thumb/16790-1.jpg</thumb>
-                    //</screenshot>
-                    //</Images>
-                    //</Game>
-                }
-
-            }
-            catch (System.Exception excpt)
-            {
-                Console.WriteLine(excpt.Message);
-            }
-            return game;
-        }
-
-        static Game getDetailsArcadeMuseum(string gameName, Game game)
-        {
-            try
-            {
-                //Start: Description</H2>
-                //End:<p>
-
-                //Start: 
-                //<H2>Game Play</H2>
-                //End:<H2>Miscellaneous</H2>
-
-                //title image
-                //<img alt="Makyou Senshi - Title screen image" src="/images/118/11812421378.png" width="240" height="256">
-
-                //Start: <h2>Cheats, Tricks, Bugs, and Easter Eggs</h2>
-                //End: <h2>
-
-
-                String ScrapeResponse = HttpPost("http://www.arcade-museum.com/results.php","q="+ HttpUtility.UrlEncode(gameName)+"&boolean=AND&search_desc=%3D%220%22&type=");
-
-                if (ScrapeResponse.Length > 0)
-                {
-                    string Description = "";
-                    String GameID = "";
-                    String GameDetailResponse = "";
-                    string gameidMarkerEnd = "\">" + gameName.ToUpper() + "</A>";
-                    Int32 gameidEndPos = ScrapeResponse.ToUpper().IndexOf(gameidMarkerEnd) + gameidMarkerEnd.Length;
-                    Int32 gameidStPos = gameidEndPos;
-                    if (gameidEndPos > gameidMarkerEnd.Length)
-                    {
-                        while (ScrapeResponse.Substring(gameidStPos, 1) != "=")
-                        {
-                            gameidStPos--;
-                        }
-
-                        if (gameidStPos < gameidEndPos)
-                        {
-                            Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
-                            GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
-
-                            GameDetailResponse = HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
-
-                            Description = ScrapeValue("Description</H2>", "<p>", GameDetailResponse);
-
-                            if (game.image == null)
-                            {
-                                string img = ScrapeValue("Title screen image", ".png", GameDetailResponse);
-                                img = img.Substring(img.IndexOf("images/"));
-                                string imagepath = SaveImage("http://www.arcade-museum.com/" + img + ".png", Path.GetFileNameWithoutExtension(game.path));
-                                if (imagepath != "")
-                                {
-                                    game.image = "~/.emulationstation/downloaded_images/" + imagepath;
-                                }
-                                //title image
-                                //<img alt="Makyou Senshi - Title screen image" src="/images/118/11812421378.png" width="240" height="256">
-                            }
-
-                            //String DescMarkerStart = "Description</H2>";
-                            //String DescMarkerEnd = "<p>";
-                            //Int32 respLength = GameDetailResponse.Length;
-                            //Int32 descStPos = GameDetailResponse.IndexOf(DescMarkerStart) + DescMarkerStart.Length;
-
-                            //Int32 descEndPos = descStPos;
-                            //while (GameDetailResponse.Substring(descEndPos, 3) != DescMarkerEnd)
-                            //{
-                            //    descEndPos++;
-                            //}
-
-                            //if (descStPos < descEndPos)
-                            //{
-                            //    Int32 DescLength = descEndPos - descStPos;
-                            //    Description = GameDetailResponse.Substring(descStPos, DescLength);
-                            //}
-                        }
-                    }
-
-                    game.desc = Description;
-                }
-
-            }
-            catch (System.Exception excpt)
-            {
-                Console.WriteLine(excpt.Message);
-            }
-            return game;
-        }
-
-        public static string ScrapeValue(string MarkerStart, string MarkerEnd, string inHtml)
-        {
-            Int32 respLength = inHtml.Length;
-            Int32 descStPos = inHtml.IndexOf(MarkerStart) + MarkerStart.Length;
-
-            Int32 descEndPos = descStPos;
-            while (inHtml.Substring(descEndPos, MarkerEnd.Length) != MarkerEnd)
-            {
-                descEndPos++;
-            }
-
-            if (descStPos < descEndPos)
-            {
-                Int32 DescLength = descEndPos - descStPos;
-                return inHtml.Substring(descStPos, DescLength);
-            }
-            else
-            {
-                return "";
-            }
-        }
-
-        public static string SaveImage(string sourceFilePath, string savefileName)
-        {
-            try
-            {
-                string foundpath = "";
-
-                if (Directory.Exists("mame") == false)
-                {
-                    Directory.CreateDirectory("mame");
-                }
-
-                HttpWebRequest lxRequest = (HttpWebRequest)WebRequest.Create(sourceFilePath);
-                lxRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-                using (HttpWebResponse lxResponse = (HttpWebResponse)lxRequest.GetResponse()){
-                   using (BinaryReader reader = new BinaryReader(lxResponse.GetResponseStream())) {
-                      Byte[] data = reader.ReadBytes(1 * 1024 * 1024 * 10);
-                      if (data.Length > 0)
-                      {
-                          using (MemoryStream mem = new MemoryStream(data))
-                          {
-                              var yourImage = Image.FromStream(mem);
-
-                              foundpath = "mame/" + savefileName + "-image.png";
-                              yourImage.Save(foundpath, ImageFormat.Png);
-                          }
-                      }
-                      //using (FileStream lxFS = new FileStream("34891.jpg", FileMode.Create)) {
-                      //    lxFS.Write(lnByte, 0, lnByte.Length);
-                      //}
-                   }
-                }
-
-                //using (WebClient webClient = new WebClient())
-                //{
-
-                //    byte[] data = webClient.DownloadData(sourceFilePath);
-
-                //    if (data.Length > 0)
-                //    {
-                //        using (MemoryStream mem = new MemoryStream(data))
-                //        {
-                //            var yourImage = Image.FromStream(mem);
-
-                //            foundpath = "mame/" + savefileName + "-image.png";
-                //            yourImage.Save(foundpath, ImageFormat.Png);
-                //        }
-                //    }
-                //}
-                return foundpath;
-            }
-            catch (Exception ex)
-            {
-                return "";
-            }
-        }
-
-        public static string HttpPostSimple(string URI, NameValueCollection parameters)
-        {
-            string result = "";
-            using (WebClient client = new WebClient())
-            {
-                byte[] response =
-                client.UploadValues(URI, parameters);
-
-                result = System.Text.Encoding.UTF8.GetString(response);
-            }
-            return result;
-        }
-
-        public static string Crawl(string rootUrl, string Url, string postParameters)
-        {
-            var cookieContainer = new CookieContainer();
-            //string test =  HttpGet(rootUrl);
-            /* initial GET Request */
-            //var getRequest = (HttpWebRequest)WebRequest.Create(rootUrl);
-
-            HttpWebRequest getRequest = (HttpWebRequest)WebRequest.Create(Url);
-            getRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-            getRequest.CookieContainer = cookieContainer;
-            ReadResponse(getRequest); // nothing to do with this, because captcha is f#@%ing dumb :)
-
-            /* POST Request */
-            //var postRequest = (HttpWebRequest)WebRequest.Create(Url);
-            HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create(Url);
-            postRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-            postRequest.AllowAutoRedirect = false; // we'll do the redirect manually; .NET does it badly
-            postRequest.CookieContainer = cookieContainer;
-            postRequest.Method = "POST";
-            postRequest.ContentType = "application/x-www-form-urlencoded";
-
-            //var postParameters =
-            //    "_EventName=E%27CONFIRMAR%27.&_EventGridId=&_EventRowId=&_MSG=&_CONINSEST=&" +
-            //    "_CONINSESTG=08775724000119&cfield=much&_VALIDATIONRESULT=1&BUTTON1=Confirmar&" +
-            //    "sCallerURL=";
-
-            var bytes = Encoding.UTF8.GetBytes(postParameters);
-
-            postRequest.ContentLength = bytes.Length;
-
-            using (var requestStream = postRequest.GetRequestStream())
-                requestStream.Write(bytes, 0, bytes.Length);
-
-            var webResponse = postRequest.GetResponse();
-
-            ReadResponse(postRequest); // not interested in this either
-
-            var redirectLocation = webResponse.Headers[HttpResponseHeader.Location];
-
-            var finalGetRequest = (HttpWebRequest)WebRequest.Create(redirectLocation);
-
-
-            /* Apply fix for the cookie */
-            FixMisplacedCookie(cookieContainer,Url,rootUrl);
-
-            /* do the final request using the correct cookies. */
-            finalGetRequest.CookieContainer = cookieContainer;
-
-            var responseText = ReadResponse(finalGetRequest);
-
-            return responseText; // Hooray!
-        }
-
-        private static string ReadResponse(HttpWebRequest getRequest)
-        {
-            using (var responseStream = getRequest.GetResponse().GetResponseStream())
-            using (var sr = new StreamReader(responseStream, Encoding.UTF8))
-            {
-                return sr.ReadToEnd();
-            }
-        }
-
-        private static void FixMisplacedCookie(CookieContainer cookieContainer, string Url, string goodUrl)
-        {
-            var misplacedCookie = cookieContainer.GetCookies(new Uri(Url))[0];
-
-            misplacedCookie.Path = "/"; // instead of "/sintegra/servlet/hwsintco"
-
-            //place the cookie in thee right place...
-            cookieContainer.SetCookies(
-                new Uri(goodUrl),//"https://www.sefaz.rr.gov.br/"),
-                misplacedCookie.ToString());
-        }
 
     }
 

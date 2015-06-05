@@ -101,7 +101,10 @@
     <Compile Include="Main.Designer.cs">
       <DependentUpon>Main.cs</DependentUpon>
     </Compile>
+    <Compile Include="Objects\HTTPHandler.cs" />
     <Compile Include="Objects\Program.cs" />
+    <Compile Include="Objects\ScrapeHandler.cs" />
+    <Compile Include="Objects\XMLHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="FormsContainer.resx">
       <DependentUpon>FormsContainer.cs</DependentUpon>
@@ -152,8 +155,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\MainBackground.jpg" />
     <Content Include="Resources\QuestionCoin.ico" />
+    <Content Include="Resources\Retro-Gaming-Nintendo-Anthology.jpg" />
+    <Content Include="Resources\retrogames.jpeg" />
     <Content Include="Resources\SpaceShip.ico" />
     <Content Include="Resources\SpaceShip_layers.ico" />
   </ItemGroup>

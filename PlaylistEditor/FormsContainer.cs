@@ -119,7 +119,5 @@ namespace PlaylistEditor
                 this.MainMenuStrip.Items[0].Image = bmp;
             }
         }
-
-
     }
 }

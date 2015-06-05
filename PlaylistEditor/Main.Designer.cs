@@ -29,22 +29,29 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnUpdate = new System.Windows.Forms.Button();
             this.btnGetGameDetails = new System.Windows.Forms.Button();
             this.GameNameBox = new System.Windows.Forms.TextBox();
             this.ResultsBox = new System.Windows.Forms.TextBox();
             this.ProcessProgress = new PlaylistEditor.ProgressBarWithCaption();
+            this.btnStop = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // button1
+            // btnUpdate
             // 
-            this.button1.Location = new System.Drawing.Point(156, 12);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(405, 136);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "Read all Files";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.btnUpdate.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(192)))), ((int)(((byte)(0)))));
+            this.btnUpdate.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnUpdate.BackgroundImage")));
+            this.btnUpdate.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.btnUpdate.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnUpdate.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnUpdate.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.btnUpdate.Location = new System.Drawing.Point(12, 12);
+            this.btnUpdate.Name = "btnUpdate";
+            this.btnUpdate.Size = new System.Drawing.Size(179, 159);
+            this.btnUpdate.TabIndex = 0;
+            this.btnUpdate.Text = "Update Games Details";
+            this.btnUpdate.UseVisualStyleBackColor = false;
+            this.btnUpdate.Click += new System.EventHandler(this.btnUpdate_Click);
             // 
             // btnGetGameDetails
             // 
@@ -87,16 +94,33 @@
             this.ProcessProgress.Size = new System.Drawing.Size(721, 23);
             this.ProcessProgress.TabIndex = 5;
             // 
+            // btnStop
+            // 
+            this.btnStop.BackColor = System.Drawing.Color.Red;
+            this.btnStop.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("btnStop.BackgroundImage")));
+            this.btnStop.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.btnStop.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.btnStop.Font = new System.Drawing.Font("Microsoft Sans Serif", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnStop.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.btnStop.Location = new System.Drawing.Point(212, 12);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(179, 159);
+            this.btnStop.TabIndex = 6;
+            this.btnStop.Text = "STOP Update";
+            this.btnStop.UseVisualStyleBackColor = false;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(721, 702);
+            this.Controls.Add(this.btnStop);
             this.Controls.Add(this.ProcessProgress);
             this.Controls.Add(this.ResultsBox);
             this.Controls.Add(this.GameNameBox);
             this.Controls.Add(this.btnGetGameDetails);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.btnUpdate);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Main";
             this.Text = "MAME Playlist Scraper";
@@ -108,11 +132,12 @@
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.Button btnGetGameDetails;
         private System.Windows.Forms.TextBox GameNameBox;
         private System.Windows.Forms.TextBox ResultsBox;
         private ProgressBarWithCaption ProcessProgress;
+        private System.Windows.Forms.Button btnStop;
     }
 }
 
