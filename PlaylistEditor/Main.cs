@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace PlaylistEditor
 {
@@ -230,6 +231,32 @@ namespace PlaylistEditor
             {
                 Console.WriteLine(excpt.Message);
             }
+        }
+
+        private void btnXMLSearch_Click(object sender, EventArgs e)
+        {
+            String filepath = Directory.GetCurrentDirectory() + "\\gamelist.xml";
+
+            //<gameList>
+            //  <game>
+            //    <path>./005.zip</path>
+
+            if (File.Exists(filepath) == true)
+            {
+                XmlDocument doc = new XmlDocument();
+                doc.Load(filepath);
+                //doc.LoadXml(@"<ArrayOfRecentFiles> <RecentFile>C:\asd\1\Examples\8389.atc</RecentFile> <RecentFile>C:\asd\1\Examples\8385.atc</RecentFile>   </ArrayOfRecentFiles>");
+                //string mFilePath = @"C:\asd\1\Examples\8385.atc";
+                //var el = doc.SelectSingleNode("/ArrayOfRecentFiles/RecentFile[text()='" + mFilePath + "']");
+                XmlNode node = doc.SelectSingleNode("/gameList/game/path[text()='" + this.GameNameBox.Text + "']");
+                this.ResultsBox.Text = node.ParentNode.ToString();
+
+                //node.ParentNode.InnerXml
+            }
+
+            //var hrefs = doc.Root.Descendants("a")
+            //    .Where(a => a.Attrib("href").Value.ToUpper().EndsWith(".PDF"))
+            //    .Select(a => a.Attrib("href"));
         }
 
 

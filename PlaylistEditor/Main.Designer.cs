@@ -35,6 +35,7 @@
             this.ResultsBox = new System.Windows.Forms.TextBox();
             this.ProcessProgress = new ProgressBarWithCaption();
             this.btnStop = new System.Windows.Forms.Button();
+            this.btnXMLSearch = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnUpdate
@@ -110,11 +111,22 @@
             this.btnStop.UseVisualStyleBackColor = false;
             this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
+            // btnXMLSearch
+            // 
+            this.btnXMLSearch.Location = new System.Drawing.Point(567, 173);
+            this.btnXMLSearch.Name = "btnXMLSearch";
+            this.btnXMLSearch.Size = new System.Drawing.Size(113, 31);
+            this.btnXMLSearch.TabIndex = 7;
+            this.btnXMLSearch.Text = "Find in xml";
+            this.btnXMLSearch.UseVisualStyleBackColor = true;
+            this.btnXMLSearch.Click += new System.EventHandler(this.btnXMLSearch_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(721, 702);
+            this.Controls.Add(this.btnXMLSearch);
             this.Controls.Add(this.btnStop);
             this.Controls.Add(this.ProcessProgress);
             this.Controls.Add(this.ResultsBox);
@@ -139,6 +151,7 @@
         private System.Windows.Forms.TextBox ResultsBox;
         private ProgressBarWithCaption ProcessProgress;
         private System.Windows.Forms.Button btnStop;
+        private System.Windows.Forms.Button btnXMLSearch;
     }
 }
 
