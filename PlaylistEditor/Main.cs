@@ -167,8 +167,8 @@ namespace PlaylistEditor
 
                         //    game = ScrapeHandler.getDetailsArcadeMuseum(cleanName, game);
                         //}
-                       
-                        XMLHandler.writexml(game);
+
+                        XMLHandler.UpdateGameXML(game, Directory.GetCurrentDirectory() + "\\gamelist.xml", true);// writexml(game);
 
                         //Refresh the Results Box by invoking it on the main window thread
                         ResultsBox.Invoke((MethodInvoker)delegate
@@ -235,28 +235,50 @@ namespace PlaylistEditor
 
         private void btnXMLSearch_Click(object sender, EventArgs e)
         {
-            String filepath = Directory.GetCurrentDirectory() + "\\gamelist.xml";
+            Game game = new Game();
+            game.path="./10yard85.zip";
+            game.name = "Test";
+            game.desc = "test";
+            game.developer = "test";
+            XMLHandler.UpdateGameXML(game,Directory.GetCurrentDirectory() + "\\gamelist.xml",true);
 
-            //<gameList>
-            //  <game>
-            //    <path>./005.zip</path>
+            //String filepath = Directory.GetCurrentDirectory() + "\\gamelist.xml";
 
-            if (File.Exists(filepath) == true)
-            {
-                XmlDocument doc = new XmlDocument();
-                doc.Load(filepath);
-                //doc.LoadXml(@"<ArrayOfRecentFiles> <RecentFile>C:\asd\1\Examples\8389.atc</RecentFile> <RecentFile>C:\asd\1\Examples\8385.atc</RecentFile>   </ArrayOfRecentFiles>");
-                //string mFilePath = @"C:\asd\1\Examples\8385.atc";
-                //var el = doc.SelectSingleNode("/ArrayOfRecentFiles/RecentFile[text()='" + mFilePath + "']");
-                XmlNode node = doc.SelectSingleNode("/gameList/game/path[text()='" + this.GameNameBox.Text + "']");
-                this.ResultsBox.Text = node.ParentNode.ToString();
+            ////<gameList>
+            ////  <game>
+            ////    <path>./005.zip</path>
 
-                //node.ParentNode.InnerXml
-            }
+            //if (File.Exists(filepath) == true)
+            //{
+            //    XmlDocument doc = new XmlDocument();
+            //    doc.Load(filepath);
+            //    //doc.LoadXml(@"<ArrayOfRecentFiles> <RecentFile>C:\asd\1\Examples\8389.atc</RecentFile> <RecentFile>C:\asd\1\Examples\8385.atc</RecentFile>   </ArrayOfRecentFiles>");
+            //    //string mFilePath = @"C:\asd\1\Examples\8385.atc";
+            //    //var el = doc.SelectSingleNode("/ArrayOfRecentFiles/RecentFile[text()='" + mFilePath + "']");
+            //    XmlNode node = doc.SelectSingleNode("/gameList/game/path[text()='" + this.GameNameBox.Text + "']").ParentNode;
 
-            //var hrefs = doc.Root.Descendants("a")
-            //    .Where(a => a.Attrib("href").Value.ToUpper().EndsWith(".PDF"))
-            //    .Select(a => a.Attrib("href"));
+            //        //xmlWriter.WriteElementString("path", game.path);
+            //        //xmlWriter.WriteElementString("name", game.name);
+            //        //xmlWriter.WriteElementString("desc", game.desc);
+            //        //xmlWriter.WriteElementString("image", game.image);
+            //        //xmlWriter.WriteElementString("releasedate", game.releasedate);
+            //        //xmlWriter.WriteElementString("developer", game.developer);
+            //        //xmlWriter.WriteElementString("publisher", game.publisher);
+            //        //xmlWriter.WriteElementString("genre", game.genre);
+            //        //xmlWriter.WriteElementString("players", game.players);
+            //        //xmlWriter.WriteElementString("rating", game.rating);
+
+            //    this.ResultsBox.Text += node.SelectSingleNode("desc").InnerText;
+            //    node.SelectSingleNode("desc").InnerText = "TEST";
+            //    doc.Save(filepath);
+            //    //this.ResultsBox.Text = node.ParentNode.ToString();
+
+            //    //node.ParentNode.InnerXml
+            //}
+
+            ////var hrefs = doc.Root.Descendants("a")
+            ////    .Where(a => a.Attrib("href").Value.ToUpper().EndsWith(".PDF"))
+            ////    .Select(a => a.Attrib("href"));
         }
 
 
