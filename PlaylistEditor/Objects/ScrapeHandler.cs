@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PlaylistEditor.Properties;
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -21,16 +22,17 @@ namespace PlaylistEditor
                     Directory.CreateDirectory("mame");
                 }
 
+                ServicePointManager.MaxServicePoints = 5;
+                ServicePointManager.MaxServicePointIdleTime = 5000;
+                ServicePointManager.UseNagleAlgorithm = true;
+                ServicePointManager.Expect100Continue = true;
+                ServicePointManager.CheckCertificateRevocationList = true;
+                ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
+                ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://www.mamedb.com"));
+
                 using (WebClient webClient = new WebClient())
                 {
-                    //http://www.mamedb.com/image/snap/64streetj
-                    //http://www.mamedb.com/image/title/64streetj
-                    //<tbody><tr><td><img src="/titles/64street.png" alt="Title Screen:  64th. Street - A Detective Story (Japan)"></td></tr><tr><td align="center">Title Screen</td></tr></tbody>
-
-                    //byte [] data = webClient.DownloadData("https://fbcdn-sphotos-h-a.akamaihd.net/hphotos-ak-xpf1/v/t34.0-12/10555140_10201501435212873_1318258071_n.jpg?oh=97ebc03895b7acee9aebbde7d6b002bf&oe=53C9ABB0&__gda__=1405685729_110e04e71d9");
-                    //byte[] data = webClient.DownloadData("http://www.mamedb.com/snap/" + fileName + ".png");
                     byte[] data = webClient.DownloadData("http://www.mamedb.com/titles/" + fileName + ".png");
-                    //byte[] data = Convert.ToByte(HttpGet("http://www.mamedb.com/snap/" + Path.GetFileNameWithoutExtension(fileName) + ".png"));
 
                     if (data.Length > 0)
                     {
@@ -185,7 +187,7 @@ namespace PlaylistEditor
                 //End: <h2>
 
 
-                String ScrapeResponse = HTTPHandler.HttpPost("http://www.arcade-museum.com/results.php", "q=" + HttpUtility.UrlEncode(gameName) + "&boolean=AND&search_desc=%3D%220%22&type=");
+                String ScrapeResponse = HTTPHandler.HttpPostwithThreads("http://www.arcade-museum.com/results.php", "q=" + HttpUtility.UrlEncode(gameName) + "&boolean=AND&search_desc=%3D%220%22&type=");
 
                 if (ScrapeResponse.Length > 0)
                 {
@@ -207,7 +209,7 @@ namespace PlaylistEditor
                             Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
                             GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
 
-                            GameDetailResponse = HTTPHandler.HttpGet("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
+                            GameDetailResponse = HTTPHandler.HttpGetwithThreads("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
 
                             Description = ScrapeValue("Description</H2>", "<p>", GameDetailResponse);
 
@@ -295,8 +297,16 @@ namespace PlaylistEditor
                     Directory.CreateDirectory("mame");
                 }
 
+                ServicePointManager.MaxServicePoints = 5;
+                ServicePointManager.MaxServicePointIdleTime = 5000;
+                ServicePointManager.UseNagleAlgorithm = true;
+                ServicePointManager.Expect100Continue = true;
+                ServicePointManager.CheckCertificateRevocationList = true;
+                ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
+                ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(sourceFilePath).Host)));
+
                 HttpWebRequest lxRequest = (HttpWebRequest)WebRequest.Create(sourceFilePath);
-                lxRequest.UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
+                lxRequest.UserAgent = Settings.Default.UserAgent;
 
                 using (HttpWebResponse lxResponse = (HttpWebResponse)lxRequest.GetResponse())
                 {

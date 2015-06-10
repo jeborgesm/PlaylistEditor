@@ -119,6 +119,7 @@
             this.btnXMLSearch.TabIndex = 7;
             this.btnXMLSearch.Text = "Find in xml";
             this.btnXMLSearch.UseVisualStyleBackColor = true;
+            this.btnXMLSearch.Visible = false;
             this.btnXMLSearch.Click += new System.EventHandler(this.btnXMLSearch_Click);
             // 
             // Main

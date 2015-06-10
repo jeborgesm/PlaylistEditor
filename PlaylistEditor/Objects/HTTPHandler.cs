@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 
 namespace PlaylistEditor
 {
@@ -54,84 +55,150 @@ namespace PlaylistEditor
             return sr.ReadToEnd().Trim();
         }
 
-        public static string HttpPostSimple(string URI, NameValueCollection parameters)
+        public static string HttpGetwithThreads(string URI)
         {
-            string result = "";
-            using (WebClient client = new WebClient())
+            try
             {
-                byte[] response =
-                client.UploadValues(URI, parameters);
+                ServicePointManager.MaxServicePoints = 5;
 
-                result = System.Text.Encoding.UTF8.GetString(response);
+                ServicePointManager.MaxServicePointIdleTime = 5000;
+
+                ServicePointManager.UseNagleAlgorithm = true;
+                ServicePointManager.Expect100Continue = true;
+                ServicePointManager.CheckCertificateRevocationList = true;
+                ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
+
+                // Use the FindServicePoint method to find an existing  
+                // ServicePoint object or to create a new one.  
+                ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
+
+                ShowProperties(servicePoint);
+
+                int hashCode = servicePoint.GetHashCode();
+
+                // Create a new 'HttpWebRequest' object to the mentioned URL.
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
+                req.UserAgent = Settings.Default.UserAgent;
+
+                System.Net.WebResponse resp = req.GetResponse();
+
+                ServicePoint currentServicePoint = req.ServicePoint;
+
+                // Display new service point properties. 
+                int currentHashCode = currentServicePoint.GetHashCode();
+
+                Console.WriteLine("New service point hashcode: " + currentHashCode);
+                Console.WriteLine("New service point max idle time: " + currentServicePoint.MaxIdleTime);
+                Console.WriteLine("New service point is idle since " + currentServicePoint.IdleSince);
+
+                // Check that a new ServicePoint instance has been created. 
+                if (hashCode == currentHashCode)
+                    Console.WriteLine("Service point reused.");
+                else
+                    Console.WriteLine("A new service point created.");
+
+                System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+                return sr.ReadToEnd().Trim();
             }
-            return result;
-        }
-
-        public static string Crawl(string rootUrl, string Url, string postParameters)
-        {
-            var cookieContainer = new CookieContainer();
-            /* initial GET Request */
-            HttpWebRequest getRequest = (HttpWebRequest)WebRequest.Create(Url);
-            getRequest.UserAgent = Settings.Default.UserAgent;//"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-            getRequest.CookieContainer = cookieContainer;
-            ReadResponse(getRequest); // nothing to do with this, because captcha is f#@%ing dumb :)
-
-            /* POST Request */
-            HttpWebRequest postRequest = (HttpWebRequest)WebRequest.Create(Url);
-            postRequest.UserAgent = Settings.Default.UserAgent;//"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-            postRequest.AllowAutoRedirect = false; // we'll do the redirect manually; .NET does it badly
-            postRequest.CookieContainer = cookieContainer;
-            postRequest.Method = "POST";
-            postRequest.ContentType = "application/x-www-form-urlencoded";
-
-            var bytes = Encoding.UTF8.GetBytes(postParameters);
-
-            postRequest.ContentLength = bytes.Length;
-
-            using (var requestStream = postRequest.GetRequestStream())
-                requestStream.Write(bytes, 0, bytes.Length);
-
-            var webResponse = postRequest.GetResponse();
-
-            ReadResponse(postRequest); // not interested in this either
-
-            var redirectLocation = webResponse.Headers[HttpResponseHeader.Location];
-
-            var finalGetRequest = (HttpWebRequest)WebRequest.Create(redirectLocation);
-
-
-            /* Apply fix for the cookie */
-            FixMisplacedCookie(cookieContainer, Url, rootUrl);
-
-            /* do the final request using the correct cookies. */
-            finalGetRequest.CookieContainer = cookieContainer;
-
-            var responseText = ReadResponse(finalGetRequest);
-
-            return responseText; // Hooray!
-        }
-
-        private static string ReadResponse(HttpWebRequest getRequest)
-        {
-            using (var responseStream = getRequest.GetResponse().GetResponseStream())
-            using (var sr = new StreamReader(responseStream, Encoding.UTF8))
+            catch (Exception ex)
             {
-                return sr.ReadToEnd();
+                return "";
             }
         }
 
-        private static void FixMisplacedCookie(CookieContainer cookieContainer, string Url, string goodUrl)
+        public static string HttpPostwithThreads(string URI, string Parameters)
         {
-            var misplacedCookie = cookieContainer.GetCookies(new Uri(Url))[0];
+            ServicePointManager.MaxServicePoints = 5;
 
-            misplacedCookie.Path = "/"; 
+            ServicePointManager.MaxServicePointIdleTime = 5000;
 
-            //place the cookie in thee right place...
-            cookieContainer.SetCookies(
-                new Uri(goodUrl),
-                misplacedCookie.ToString());
+            ServicePointManager.UseNagleAlgorithm = true;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.CheckCertificateRevocationList = true;
+            ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
+
+            // Use the FindServicePoint method to find an existing  
+            // ServicePoint object or to create a new one.  
+            ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
+
+            ShowProperties(servicePoint);
+
+            int hashCode = servicePoint.GetHashCode();
+
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
+            req.UserAgent = Settings.Default.UserAgent;
+
+            req.ContentType = "application/x-www-form-urlencoded";
+            req.Method = "POST";
+
+            byte[] bytes = System.Text.Encoding.ASCII.GetBytes(Parameters);
+            req.ContentLength = bytes.Length;
+            System.IO.Stream os = req.GetRequestStream();
+            os.Write(bytes, 0, bytes.Length); //Push it out there
+            os.Close();
+            System.Net.WebResponse resp = req.GetResponse();
+
+            ServicePoint currentServicePoint = req.ServicePoint;
+
+            // Display new service point properties. 
+            int currentHashCode = currentServicePoint.GetHashCode();
+
+            Console.WriteLine("New service point hashcode: " + currentHashCode);
+            Console.WriteLine("New service point max idle time: " + currentServicePoint.MaxIdleTime);
+            Console.WriteLine("New service point is idle since " + currentServicePoint.IdleSince);
+
+            // Check that a new ServicePoint instance has been created. 
+            if (hashCode == currentHashCode)
+                Console.WriteLine("Service point reused.");
+            else
+                Console.WriteLine("A new service point created.");
+
+            if (resp == null) return null;
+            System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+            return sr.ReadToEnd().Trim();
+        }
+
+        private static void ShowProperties(ServicePoint sp)
+        {
+            Console.WriteLine("Done calling FindServicePoint()...");
+
+            // Display the ServicePoint Internet resource address.
+            Console.WriteLine("Address = {0} ", sp.Address.ToString());
+
+            // Display the date and time that the ServicePoint was last  
+            // connected to a host.
+            Console.WriteLine("IdleSince = " + sp.IdleSince.ToString());
+
+            // Display the maximum length of time that the ServicePoint instance   
+            // is allowed to maintain an idle connection to an Internet   
+            // resource before it is recycled for use in another connection.
+            Console.WriteLine("MaxIdleTime = " + sp.MaxIdleTime);
+
+            Console.WriteLine("ConnectionName = " + sp.ConnectionName);
+
+            // Display the maximum number of connections allowed on this  
+            // ServicePoint instance.
+            Console.WriteLine("ConnectionLimit = " + sp.ConnectionLimit);
+
+            // Display the number of connections associated with this  
+            // ServicePoint instance.
+            Console.WriteLine("CurrentConnections = " + sp.CurrentConnections);
+
+            if (sp.Certificate == null)
+                Console.WriteLine("Certificate = (null)");
+            else
+                Console.WriteLine("Certificate = " + sp.Certificate.ToString());
+
+            if (sp.ClientCertificate == null)
+                Console.WriteLine("ClientCertificate = (null)");
+            else
+                Console.WriteLine("ClientCertificate = " + sp.ClientCertificate.ToString());
+
+            Console.WriteLine("ProtocolVersion = " + sp.ProtocolVersion.ToString());
+            Console.WriteLine("SupportsPipelining = " + sp.SupportsPipelining);
+
+            Console.WriteLine("UseNagleAlgorithm = " + sp.UseNagleAlgorithm.ToString());
+            Console.WriteLine("Expect 100-continue = " + sp.Expect100Continue.ToString());
         }
 
     }
