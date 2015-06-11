@@ -59,18 +59,19 @@ namespace PlaylistEditor
         {
             try
             {
-                ServicePointManager.MaxServicePoints = 5;
+                //ServicePointManager.MaxServicePoints = 5;
 
-                ServicePointManager.MaxServicePointIdleTime = 5000;
+                //ServicePointManager.MaxServicePointIdleTime = 5000;
 
-                ServicePointManager.UseNagleAlgorithm = true;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.CheckCertificateRevocationList = true;
-                ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
+                //ServicePointManager.UseNagleAlgorithm = true;
+                //ServicePointManager.Expect100Continue = true;
+                //ServicePointManager.CheckCertificateRevocationList = true;
+                //ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
 
-                // Use the FindServicePoint method to find an existing  
-                // ServicePoint object or to create a new one.  
-                ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
+                //// Use the FindServicePoint method to find an existing  
+                //// ServicePoint object or to create a new one.  
+                //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
+                ServicePoint servicePoint = RequestThreads(URI);
 
                 ShowProperties(servicePoint);
 
@@ -108,18 +109,19 @@ namespace PlaylistEditor
 
         public static string HttpPostwithThreads(string URI, string Parameters)
         {
-            ServicePointManager.MaxServicePoints = 5;
+            //ServicePointManager.MaxServicePoints = 5;
 
-            ServicePointManager.MaxServicePointIdleTime = 5000;
+            //ServicePointManager.MaxServicePointIdleTime = 5000;
 
-            ServicePointManager.UseNagleAlgorithm = true;
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.CheckCertificateRevocationList = true;
-            ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
+            //ServicePointManager.UseNagleAlgorithm = true;
+            //ServicePointManager.Expect100Continue = true;
+            //ServicePointManager.CheckCertificateRevocationList = true;
+            //ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
 
-            // Use the FindServicePoint method to find an existing  
-            // ServicePoint object or to create a new one.  
-            ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
+            //// Use the FindServicePoint method to find an existing  
+            //// ServicePoint object or to create a new one.  
+            //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
+            ServicePoint servicePoint = RequestThreads(URI);
 
             ShowProperties(servicePoint);
 
@@ -156,6 +158,18 @@ namespace PlaylistEditor
             if (resp == null) return null;
             System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
             return sr.ReadToEnd().Trim();
+        }
+
+        public static ServicePoint RequestThreads(string URL) 
+        {
+            ServicePointManager.MaxServicePoints = 5;
+            ServicePointManager.MaxServicePointIdleTime = 5000;
+            ServicePointManager.UseNagleAlgorithm = true;
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.CheckCertificateRevocationList = true;
+            ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
+            ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URL).Host)));
+            return servicePoint;
         }
 
         private static void ShowProperties(ServicePoint sp)
@@ -199,6 +213,53 @@ namespace PlaylistEditor
 
             Console.WriteLine("UseNagleAlgorithm = " + sp.UseNagleAlgorithm.ToString());
             Console.WriteLine("Expect 100-continue = " + sp.Expect100Continue.ToString());
+        }
+
+        /// <summary>
+        /// Blocks until the file is not locked any more.
+        /// </summary>
+        /// <param name="fullPath"></param>
+        public static bool WaitForFile(string fullPath)
+        {
+            int numTries = 0;
+            while (true)
+            {
+                ++numTries;
+                try
+                {
+                    // Attempt to open the file exclusively.
+                    using (FileStream fs = new FileStream(fullPath,
+                        FileMode.Open, FileAccess.ReadWrite,
+                        FileShare.None, 100))
+                    {
+                        fs.ReadByte();
+
+                        // If we got this far the file is ready
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    //Log.LogWarning(
+                    //   "WaitForFile {0} failed to get an exclusive lock: {1}",
+                    //    fullPath, ex.ToString());
+
+                    if (numTries > 100)
+                    {
+                        //Log.LogWarning(
+                        //    "WaitForFile {0} giving up after 10 tries",
+                        //    fullPath);
+                        return false;
+                    }
+
+                    // Wait for the lock to be released
+                    System.Threading.Thread.Sleep(500);
+                }
+            }
+
+            //Log.LogTrace("WaitForFile {0} returning true after {1} tries",
+            //    fullPath, numTries);
+            return true;
         }
 
     }

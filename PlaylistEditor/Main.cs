@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
+using System.Threading.Tasks;
 
 namespace PlaylistEditor
 {
@@ -72,8 +73,14 @@ namespace PlaylistEditor
 
         private void SetStatus(string status)
         {
-            ToolStripStatusLabel statusStrip = ((FormsContainer)(this.MdiParent)).toolStripStatusLabel;
-            statusStrip.Text = status;
+            try
+            {
+                ToolStripStatusLabel statusStrip = ((FormsContainer)(this.MdiParent)).toolStripStatusLabel;
+                statusStrip.Text = status;
+            }
+            catch (System.Exception excpt)
+            {
+            }
         }
 
         private void DoWork()
@@ -94,16 +101,18 @@ namespace PlaylistEditor
                 ResultsBox.Invoke((MethodInvoker)delegate
                      {ResultsBox.Text = ""; });
                 
-                foreach (string f in Directory.GetFiles(d))
+                //foreach (string f in Directory.GetFiles(d))
+                Parallel.ForEach(Directory.GetFiles(d), f =>
                 {
-                    if (stopProcess) { //If process is ordered to Stop loop is finished
+                    if (stopProcess)
+                    { //If process is ordered to Stop loop is finished
                         SetStatus("Process Stopped! - GAME OVER");
 
                         ProcessProgress.Invoke((MethodInvoker)delegate
                         { ProcessProgress.Value = 100; ProcessProgress.Maximum = 100; ProcessProgress.CustomText = "Process Stopped! - GAME OVER"; });
 
-                        break; 
-                    } 
+                        //break;
+                    }
 
                     Debug.WriteLine(f);
                     String ScrapeResponse = HTTPHandler.HttpGetwithThreads("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
@@ -116,10 +125,10 @@ namespace PlaylistEditor
                         String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
                         String TitleMarkerEnd = "</h1>";
 
-                        game.name = ScrapeHandler.ScrapeValue(TitleMarkerStart, TitleMarkerEnd, ScrapeResponse).Replace("(MAME version 0.147)", "").Trim()
+                        game.name = ScrapeHandler.ScrapeValue(TitleMarkerStart, TitleMarkerEnd, ScrapeResponse).Replace("(MAME version 0.147)", "").Trim();
 
                         if (game.name != "")
-                        { 
+                        {
                             int gameParenthesis = game.name.IndexOf("(");
                             string cleanName = "";
                             if (gameParenthesis > 0)
@@ -144,7 +153,7 @@ namespace PlaylistEditor
 
                         //Refresh the Results Box by invoking it on the main window thread
                         ResultsBox.Invoke((MethodInvoker)delegate
-                        {  
+                        {
                             ResultsBox.Text += game.name + " - " + game.desc + Environment.NewLine;
                             ResultsBox.SelectionStart = ResultsBox.Text.Length;
                             ResultsBox.ScrollToCaret();
@@ -154,13 +163,13 @@ namespace PlaylistEditor
                         ProcessProgress.Invoke((MethodInvoker)delegate
                         {
                             //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
-                            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " +  game.name;
+                            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
                             ProcessProgress.Value++;
                         });
 
                         SetStatus("File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name);
                     }
-                }
+                });
 
                 //DirSearch(d);
 

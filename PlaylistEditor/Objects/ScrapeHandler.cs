@@ -22,13 +22,15 @@ namespace PlaylistEditor
                     Directory.CreateDirectory("mame");
                 }
 
-                ServicePointManager.MaxServicePoints = 5;
-                ServicePointManager.MaxServicePointIdleTime = 5000;
-                ServicePointManager.UseNagleAlgorithm = true;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.CheckCertificateRevocationList = true;
-                ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
-                ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://www.mamedb.com"));
+                //ServicePointManager.MaxServicePoints = 5;
+                //ServicePointManager.MaxServicePointIdleTime = 5000;
+                //ServicePointManager.UseNagleAlgorithm = true;
+                //ServicePointManager.Expect100Continue = true;
+                //ServicePointManager.CheckCertificateRevocationList = true;
+                //ServicePointManager.DefaultConnectionLimit = 20;// ServicePointManager.DefaultPersistentConnectionLimit;
+                //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://www.mamedb.com"));
+
+                ServicePoint servicePoint = HTTPHandler.RequestThreads("http://www.mamedb.com");
 
                 using (WebClient webClient = new WebClient())
                 {
@@ -297,13 +299,15 @@ namespace PlaylistEditor
                     Directory.CreateDirectory("mame");
                 }
 
-                ServicePointManager.MaxServicePoints = 5;
-                ServicePointManager.MaxServicePointIdleTime = 5000;
-                ServicePointManager.UseNagleAlgorithm = true;
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.CheckCertificateRevocationList = true;
-                ServicePointManager.DefaultConnectionLimit = ServicePointManager.DefaultPersistentConnectionLimit;
-                ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(sourceFilePath).Host)));
+                //ServicePointManager.MaxServicePoints = 5;
+                //ServicePointManager.MaxServicePointIdleTime = 5000;
+                //ServicePointManager.UseNagleAlgorithm = true;
+                //ServicePointManager.Expect100Continue = true;
+                //ServicePointManager.CheckCertificateRevocationList = true;
+                //ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
+                //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(sourceFilePath).Host)));
+
+                ServicePoint servicePoint = HTTPHandler.RequestThreads(sourceFilePath);
 
                 HttpWebRequest lxRequest = (HttpWebRequest)WebRequest.Create(sourceFilePath);
                 lxRequest.UserAgent = Settings.Default.UserAgent;

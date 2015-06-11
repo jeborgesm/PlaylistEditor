@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -9,6 +10,8 @@ namespace PlaylistEditor
 {
     class XMLHandler
     {
+        private static Mutex mut = new Mutex();
+
         public static void OpenCreateXMLFile(string filepath)
         {
             if (File.Exists(filepath) == false)
@@ -70,43 +73,54 @@ namespace PlaylistEditor
             }
             else
             {
-                XDocument xDocument = XDocument.Load(filepath);
-                XElement root = xDocument.Element("gameList");
-                if (root.HasElements)
-                {
-                    IEnumerable<XElement> rows = root.Descendants("game");
-                    XElement lastRow = rows.Last();
+                mut.WaitOne();
+                //if (HTTPHandler.WaitForFile(filepath))
+                //{
+                    XDocument xDocument = XDocument.Load(filepath);
+                    XElement root = xDocument.Element("gameList");
+                    if (root.HasElements)
+                    {
+                        IEnumerable<XElement> rows = root.Descendants("game");
+                        XElement lastRow = rows.Last();
 
-                    lastRow.AddAfterSelf(
-                        new XElement("game",
-                        new XElement("path", game.path),
-                        new XElement("desc", game.desc),
-                        new XElement("name", game.name),
-                        new XElement("image", game.image),
-                        new XElement("releasedate", game.releasedate),
-                        new XElement("developer", game.developer),
-                        new XElement("publisher", game.publisher),
-                        new XElement("genre", game.genre),
-                        new XElement("players", game.players),
-                        new XElement("rating", game.rating)));
-                    xDocument.Save(filepath);
-                }
-                else 
-                { 
-                    root.Add(
-                        new XElement("game",
-                        new XElement("path", game.path),
-                        new XElement("desc", game.desc),
-                        new XElement("name", game.name),
-                        new XElement("image", game.image),
-                        new XElement("releasedate", game.releasedate),
-                        new XElement("developer", game.developer),
-                        new XElement("publisher", game.publisher),
-                        new XElement("genre", game.genre),
-                        new XElement("players", game.players),
-                        new XElement("rating", game.rating)));
-                    xDocument.Save(filepath);
-                }
+                        lastRow.AddAfterSelf(
+                            new XElement("game",
+                            new XElement("path", game.path),
+                            new XElement("desc", game.desc),
+                            new XElement("name", game.name),
+                            new XElement("image", game.image),
+                            new XElement("releasedate", game.releasedate),
+                            new XElement("developer", game.developer),
+                            new XElement("publisher", game.publisher),
+                            new XElement("genre", game.genre),
+                            new XElement("players", game.players),
+                            new XElement("rating", game.rating)));
+
+                        StreamWriter outStream = System.IO.File.CreateText(filepath);
+                        xDocument.Save(outStream);
+                        outStream.Close();
+                    }
+                    else
+                    {
+                        root.Add(
+                            new XElement("game",
+                            new XElement("path", game.path),
+                            new XElement("desc", game.desc),
+                            new XElement("name", game.name),
+                            new XElement("image", game.image),
+                            new XElement("releasedate", game.releasedate),
+                            new XElement("developer", game.developer),
+                            new XElement("publisher", game.publisher),
+                            new XElement("genre", game.genre),
+                            new XElement("players", game.players),
+                            new XElement("rating", game.rating)));
+
+                        StreamWriter outStream = System.IO.File.CreateText(filepath);
+                        xDocument.Save(outStream);
+                        outStream.Close();
+                    }
+                //}
+                mut.ReleaseMutex();
             }
 
         }
@@ -116,31 +130,51 @@ namespace PlaylistEditor
             OpenCreateXMLFile(filepath);
 
             XmlDocument doc = new XmlDocument();
-            doc.Load(filepath);
+            mut.WaitOne();
+            //if (HTTPHandler.WaitForFile(filepath))
+            //{
+                using (Stream s = File.OpenRead(filepath))
+                {
+                    doc.Load(s);
+                }
 
-            XmlNode node = doc.SelectSingleNode("/gameList/game/path[text()='" + game.path + "']");
-            if(node != null)
-            {
+                //if (HTTPHandler.WaitForFile(filepath))
+                //{
+                    XmlNode node = doc.SelectSingleNode("/gameList/game/path[text()='" + game.path + "']");
 
-                node = node.ParentNode;
+                    if (node != null)
+                    {
 
-                node.SelectSingleNode("name").InnerText = game.name;
-                node.SelectSingleNode("desc").InnerText = game.desc;
-                node.SelectSingleNode("image").InnerText = game.image;
-                node.SelectSingleNode("releasedate").InnerText = game.releasedate;
-                node.SelectSingleNode("developer").InnerText = game.developer;
-                node.SelectSingleNode("publisher").InnerText = game.publisher;
-                node.SelectSingleNode("genre").InnerText = game.genre;
-                node.SelectSingleNode("players").InnerText = game.players;
-                node.SelectSingleNode("rating").InnerText = game.rating;
+                        node = node.ParentNode;
 
-                doc.Save(filepath);
+                        node.SelectSingleNode("name").InnerText = game.name;
+                        node.SelectSingleNode("desc").InnerText = game.desc;
+                        node.SelectSingleNode("image").InnerText = game.image;
+                        node.SelectSingleNode("releasedate").InnerText = game.releasedate;
+                        node.SelectSingleNode("developer").InnerText = game.developer;
+                        node.SelectSingleNode("publisher").InnerText = game.publisher;
+                        node.SelectSingleNode("genre").InnerText = game.genre;
+                        node.SelectSingleNode("players").InnerText = game.players;
+                        node.SelectSingleNode("rating").InnerText = game.rating;
 
-            }
-            else if (insertnotfound == true)
-            {
-                AddGameNode(game, filepath);
-            }
+                        //using (var writer = new StreamWriter(filepath))
+                        //{
+                        //    doc.Save(writer);
+                        //}
+
+                        //doc.Save(filepath);
+
+                        StreamWriter outStream = System.IO.File.CreateText(filepath);
+                        doc.Save(outStream);
+                        outStream.Close();
+                    }
+                //}
+                else if (insertnotfound == true)
+                {
+                    AddGameNode(game, filepath);
+                }
+            //}
+            mut.ReleaseMutex();
         }
     }
 }
