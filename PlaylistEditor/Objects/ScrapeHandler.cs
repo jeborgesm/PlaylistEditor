@@ -22,14 +22,6 @@ namespace PlaylistEditor
                     Directory.CreateDirectory("mame");
                 }
 
-                //ServicePointManager.MaxServicePoints = 5;
-                //ServicePointManager.MaxServicePointIdleTime = 5000;
-                //ServicePointManager.UseNagleAlgorithm = true;
-                //ServicePointManager.Expect100Continue = true;
-                //ServicePointManager.CheckCertificateRevocationList = true;
-                //ServicePointManager.DefaultConnectionLimit = 20;// ServicePointManager.DefaultPersistentConnectionLimit;
-                //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://www.mamedb.com"));
-
                 ServicePoint servicePoint = HTTPHandler.RequestThreads("http://www.mamedb.com");
 
                 using (WebClient webClient = new WebClient())
@@ -299,14 +291,6 @@ namespace PlaylistEditor
                     Directory.CreateDirectory("mame");
                 }
 
-                //ServicePointManager.MaxServicePoints = 5;
-                //ServicePointManager.MaxServicePointIdleTime = 5000;
-                //ServicePointManager.UseNagleAlgorithm = true;
-                //ServicePointManager.Expect100Continue = true;
-                //ServicePointManager.CheckCertificateRevocationList = true;
-                //ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
-                //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(sourceFilePath).Host)));
-
                 ServicePoint servicePoint = HTTPHandler.RequestThreads(sourceFilePath);
 
                 HttpWebRequest lxRequest = (HttpWebRequest)WebRequest.Create(sourceFilePath);
@@ -327,28 +311,8 @@ namespace PlaylistEditor
                                 yourImage.Save(foundpath, ImageFormat.Png);
                             }
                         }
-                        //using (FileStream lxFS = new FileStream("34891.jpg", FileMode.Create)) {
-                        //    lxFS.Write(lnByte, 0, lnByte.Length);
-                        //}
                     }
                 }
-
-                //using (WebClient webClient = new WebClient())
-                //{
-
-                //    byte[] data = webClient.DownloadData(sourceFilePath);
-
-                //    if (data.Length > 0)
-                //    {
-                //        using (MemoryStream mem = new MemoryStream(data))
-                //        {
-                //            var yourImage = Image.FromStream(mem);
-
-                //            foundpath = "mame/" + savefileName + "-image.png";
-                //            yourImage.Save(foundpath, ImageFormat.Png);
-                //        }
-                //    }
-                //}
                 return foundpath;
             }
             catch (Exception ex)

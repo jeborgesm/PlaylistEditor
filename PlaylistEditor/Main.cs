@@ -96,85 +96,106 @@ namespace PlaylistEditor
                 int filesProcessed = 0;
 
                 ProcessProgress.Invoke((MethodInvoker)delegate
-                { ProcessProgress.Value = 0; ProcessProgress.Maximum = fileCount; ProcessProgress.CustomText = "Process START! - Ready Player 1"; });
+                    {ProcessProgress.Value = 0; ProcessProgress.Maximum = fileCount; ProcessProgress.CustomText = "Process START! - Ready Player 1"; });
 
                 ResultsBox.Invoke((MethodInvoker)delegate
                      {ResultsBox.Text = ""; });
-                
-                //foreach (string f in Directory.GetFiles(d))
-                Parallel.ForEach(Directory.GetFiles(d), f =>
-                {
-                    if (stopProcess)
-                    { //If process is ordered to Stop loop is finished
-                        SetStatus("Process Stopped! - GAME OVER");
 
-                        ProcessProgress.Invoke((MethodInvoker)delegate
-                        { ProcessProgress.Value = 100; ProcessProgress.Maximum = 100; ProcessProgress.CustomText = "Process Stopped! - GAME OVER"; });
+                CancellationTokenSource cts = new CancellationTokenSource();
 
-                        //break;
-                    }
+                // Use ParallelOptions instance to store the CancellationToken
+                ParallelOptions po = new ParallelOptions();
+                po.CancellationToken = cts.Token;
+                po.MaxDegreeOfParallelism = 15;// System.Environment.ProcessorCount; //4;
 
-                    Debug.WriteLine(f);
-                    String ScrapeResponse = HTTPHandler.HttpGetwithThreads("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
-
-                    if (ScrapeResponse != "")
+                try 
+                { 
+                    //foreach (string f in Directory.GetFiles(d))
+                    Parallel.ForEach(Directory.GetFiles(d), po, f =>
                     {
-                        Game game = ScrapeHandler.getDetails(ScrapeResponse);
-                        game.path = "./" + Path.GetFileName(f);
+                        if (stopProcess)
+                        { //If process is ordered to Stop loop is finished
+                            SetStatus("Process Stopped! - GAME OVER");
 
-                        String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
-                        String TitleMarkerEnd = "</h1>";
+                            ProcessProgress.Invoke((MethodInvoker)delegate
+                            { ProcessProgress.Value = 100; ProcessProgress.Maximum = 100; ProcessProgress.CustomText = "Process Stopped! - GAME OVER"; });
 
-                        game.name = ScrapeHandler.ScrapeValue(TitleMarkerStart, TitleMarkerEnd, ScrapeResponse).Replace("(MAME version 0.147)", "").Trim();
-
-                        if (game.name != "")
-                        {
-                            int gameParenthesis = game.name.IndexOf("(");
-                            string cleanName = "";
-                            if (gameParenthesis > 0)
-                            {
-                                cleanName = game.name.Substring(0, game.name.IndexOf("(")).Trim().Replace(":", "");
-                            }
-                            else
-                            {
-                                cleanName = game.name.Replace(":", "");
-                            }
-
-                            string imagepath = ScrapeHandler.getimage("", game.path);
-                            if (imagepath != "")
-                            {
-                                game.image = "~/.emulationstation/downloaded_images/" + imagepath;
-                            }
-
-                            game = ScrapeHandler.getDetailsArcadeMuseum(cleanName, game);
+                            cts.Cancel();
+                            //break;
                         }
 
-                        XMLHandler.UpdateGameXML(game, Directory.GetCurrentDirectory() + "\\gamelist.xml", true);// writexml(game);
+                        Debug.WriteLine(f);
+                        String ScrapeResponse = HTTPHandler.HttpGetwithThreads("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
 
-                        //Refresh the Results Box by invoking it on the main window thread
-                        ResultsBox.Invoke((MethodInvoker)delegate
+                        if (ScrapeResponse != "")
                         {
-                            ResultsBox.Text += game.name + " - " + game.desc + Environment.NewLine;
-                            ResultsBox.SelectionStart = ResultsBox.Text.Length;
-                            ResultsBox.ScrollToCaret();
-                        });
+                            Game game = ScrapeHandler.getDetails(ScrapeResponse);
+                            game.path = "./" + Path.GetFileName(f);
 
-                        filesProcessed++;
-                        ProcessProgress.Invoke((MethodInvoker)delegate
-                        {
-                            //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
-                            ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
-                            ProcessProgress.Value++;
-                        });
+                            String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
+                            String TitleMarkerEnd = "</h1>";
 
-                        SetStatus("File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name);
-                    }
-                });
+                            game.name = ScrapeHandler.ScrapeValue(TitleMarkerStart, TitleMarkerEnd, ScrapeResponse).Replace("(MAME version 0.147)", "").Trim();
 
-                //DirSearch(d);
+                            if (game.name != "")
+                            {
+                                int gameParenthesis = game.name.IndexOf("(");
+                                string cleanName = "";
+                                if (gameParenthesis > 0)
+                                {
+                                    cleanName = game.name.Substring(0, game.name.IndexOf("(")).Trim().Replace(":", "");
+                                }
+                                else
+                                {
+                                    cleanName = game.name.Replace(":", "");
+                                }
+
+                                string imagepath = ScrapeHandler.getimage("", game.path);
+                                if (imagepath != "")
+                                {
+                                    game.image = "~/.emulationstation/downloaded_images/" + imagepath;
+                                }
+
+                                game = ScrapeHandler.getDetailsArcadeMuseum(cleanName, game);
+                            }
+
+                            XMLHandler.UpdateGameXML(game, Directory.GetCurrentDirectory() + "\\gamelist.xml", true);// writexml(game);
+
+                            //Refresh the Results Box by invoking it on the main window thread
+                            ResultsBox.Invoke((MethodInvoker)delegate
+                            {
+                                ResultsBox.Text += game.name + " - " + game.desc + Environment.NewLine;
+                                ResultsBox.SelectionStart = ResultsBox.Text.Length;
+                                ResultsBox.ScrollToCaret();
+                            });
+
+                            filesProcessed++;
+                            ProcessProgress.Invoke((MethodInvoker)delegate
+                            {
+                                //ProcessProgress.Text += "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " in " + d + Environment.NewLine;
+                                ProcessProgress.CustomText = "File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name;
+                                if (ProcessProgress.Value < ProcessProgress.Maximum)
+                                    ProcessProgress.Value++;
+                            });
+
+                            SetStatus("File " + filesProcessed.ToString() + " of " + fileCount.ToString() + " - " + game.name);
+                        }
+                    });
+
+                    //DirSearch(d);
+                }
+                catch (OperationCanceledException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                finally
+                {
+                    cts.Dispose();
+                }
 
                 ProcessProgress.Invoke((MethodInvoker)delegate
                 { ProcessProgress.Value = 100; ProcessProgress.Maximum = 100; ProcessProgress.CustomText = "Process Complete! - YOU WIN"; });
+                SetStatus("Process Complete! - YOU WIN");
 
                 //Join the thread
                 Thread.CurrentThread.Join(0);

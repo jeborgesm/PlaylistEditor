@@ -59,22 +59,8 @@ namespace PlaylistEditor
         {
             try
             {
-                //ServicePointManager.MaxServicePoints = 5;
-
-                //ServicePointManager.MaxServicePointIdleTime = 5000;
-
-                //ServicePointManager.UseNagleAlgorithm = true;
-                //ServicePointManager.Expect100Continue = true;
-                //ServicePointManager.CheckCertificateRevocationList = true;
-                //ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
-
-                //// Use the FindServicePoint method to find an existing  
-                //// ServicePoint object or to create a new one.  
-                //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
                 ServicePoint servicePoint = RequestThreads(URI);
-
                 ShowProperties(servicePoint);
-
                 int hashCode = servicePoint.GetHashCode();
 
                 // Create a new 'HttpWebRequest' object to the mentioned URL.
@@ -83,20 +69,8 @@ namespace PlaylistEditor
 
                 System.Net.WebResponse resp = req.GetResponse();
 
-                ServicePoint currentServicePoint = req.ServicePoint;
-
                 // Display new service point properties. 
-                int currentHashCode = currentServicePoint.GetHashCode();
-
-                Console.WriteLine("New service point hashcode: " + currentHashCode);
-                Console.WriteLine("New service point max idle time: " + currentServicePoint.MaxIdleTime);
-                Console.WriteLine("New service point is idle since " + currentServicePoint.IdleSince);
-
-                // Check that a new ServicePoint instance has been created. 
-                if (hashCode == currentHashCode)
-                    Console.WriteLine("Service point reused.");
-                else
-                    Console.WriteLine("A new service point created.");
+                RequestThreadsStatus(req, hashCode);
 
                 System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
                 return sr.ReadToEnd().Trim();
@@ -109,23 +83,9 @@ namespace PlaylistEditor
 
         public static string HttpPostwithThreads(string URI, string Parameters)
         {
-            //ServicePointManager.MaxServicePoints = 5;
-
-            //ServicePointManager.MaxServicePointIdleTime = 5000;
-
-            //ServicePointManager.UseNagleAlgorithm = true;
-            //ServicePointManager.Expect100Continue = true;
-            //ServicePointManager.CheckCertificateRevocationList = true;
-            //ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
-
-            //// Use the FindServicePoint method to find an existing  
-            //// ServicePoint object or to create a new one.  
-            //ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URI).Host)));
             ServicePoint servicePoint = RequestThreads(URI);
-
-            ShowProperties(servicePoint);
-
             int hashCode = servicePoint.GetHashCode();
+            ShowProperties(servicePoint);
 
             HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
             req.UserAgent = Settings.Default.UserAgent;
@@ -140,20 +100,8 @@ namespace PlaylistEditor
             os.Close();
             System.Net.WebResponse resp = req.GetResponse();
 
-            ServicePoint currentServicePoint = req.ServicePoint;
-
             // Display new service point properties. 
-            int currentHashCode = currentServicePoint.GetHashCode();
-
-            Console.WriteLine("New service point hashcode: " + currentHashCode);
-            Console.WriteLine("New service point max idle time: " + currentServicePoint.MaxIdleTime);
-            Console.WriteLine("New service point is idle since " + currentServicePoint.IdleSince);
-
-            // Check that a new ServicePoint instance has been created. 
-            if (hashCode == currentHashCode)
-                Console.WriteLine("Service point reused.");
-            else
-                Console.WriteLine("A new service point created.");
+            RequestThreadsStatus(req, hashCode);
 
             if (resp == null) return null;
             System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
@@ -172,8 +120,29 @@ namespace PlaylistEditor
             return servicePoint;
         }
 
+        public static void RequestThreadsStatus(HttpWebRequest req, int hashCode)
+        {
+            #if DEBUG
+            ServicePoint currentServicePoint = req.ServicePoint;
+
+            // Display new service point properties. 
+            int currentHashCode = currentServicePoint.GetHashCode();
+
+            Console.WriteLine("New service point hashcode: " + currentHashCode);
+            Console.WriteLine("New service point max idle time: " + currentServicePoint.MaxIdleTime);
+            Console.WriteLine("New service point is idle since " + currentServicePoint.IdleSince);
+
+            // Check that a new ServicePoint instance has been created. 
+            if (hashCode == currentHashCode)
+                Console.WriteLine("Service point reused.");
+            else
+                Console.WriteLine("A new service point created.");
+            #endif
+        }
+
         private static void ShowProperties(ServicePoint sp)
         {
+            #if DEBUG
             Console.WriteLine("Done calling FindServicePoint()...");
 
             // Display the ServicePoint Internet resource address.
@@ -213,6 +182,7 @@ namespace PlaylistEditor
 
             Console.WriteLine("UseNagleAlgorithm = " + sp.UseNagleAlgorithm.ToString());
             Console.WriteLine("Expect 100-continue = " + sp.Expect100Continue.ToString());
+            #endif
         }
 
         /// <summary>
