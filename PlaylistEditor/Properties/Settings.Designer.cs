@@ -46,5 +46,77 @@ namespace PlaylistEditor.Properties {
                 this["UserAgent"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public int SPM_MaxServicePoints {
+            get {
+                return ((int)(this["SPM_MaxServicePoints"]));
+            }
+            set {
+                this["SPM_MaxServicePoints"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int SPM_MaxServicePointIdleTime {
+            get {
+                return ((int)(this["SPM_MaxServicePointIdleTime"]));
+            }
+            set {
+                this["SPM_MaxServicePointIdleTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SPM_UseNagleAlgorithm {
+            get {
+                return ((bool)(this["SPM_UseNagleAlgorithm"]));
+            }
+            set {
+                this["SPM_UseNagleAlgorithm"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SPM_Expect100Continue {
+            get {
+                return ((bool)(this["SPM_Expect100Continue"]));
+            }
+            set {
+                this["SPM_Expect100Continue"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SPM_CheckCertificateRevocationList {
+            get {
+                return ((bool)(this["SPM_CheckCertificateRevocationList"]));
+            }
+            set {
+                this["SPM_CheckCertificateRevocationList"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("15")]
+        public int SPM_DefaultConnectionLimit {
+            get {
+                return ((int)(this["SPM_DefaultConnectionLimit"]));
+            }
+            set {
+                this["SPM_DefaultConnectionLimit"] = value;
+            }
+        }
     }
 }

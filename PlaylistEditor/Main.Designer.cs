@@ -36,6 +36,7 @@
             this.ProcessProgress = new ProgressBarWithCaption();
             this.btnStop = new System.Windows.Forms.Button();
             this.btnXMLSearch = new System.Windows.Forms.Button();
+            this.ThreadResultBox = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnUpdate
@@ -56,9 +57,9 @@
             // 
             // btnGetGameDetails
             // 
-            this.btnGetGameDetails.Location = new System.Drawing.Point(428, 173);
+            this.btnGetGameDetails.Location = new System.Drawing.Point(397, 173);
             this.btnGetGameDetails.Name = "btnGetGameDetails";
-            this.btnGetGameDetails.Size = new System.Drawing.Size(133, 31);
+            this.btnGetGameDetails.Size = new System.Drawing.Size(164, 31);
             this.btnGetGameDetails.TabIndex = 1;
             this.btnGetGameDetails.Text = "Get Game Details";
             this.btnGetGameDetails.UseVisualStyleBackColor = true;
@@ -66,7 +67,7 @@
             // 
             // GameNameBox
             // 
-            this.GameNameBox.Location = new System.Drawing.Point(156, 177);
+            this.GameNameBox.Location = new System.Drawing.Point(118, 177);
             this.GameNameBox.Name = "GameNameBox";
             this.GameNameBox.Size = new System.Drawing.Size(273, 22);
             this.GameNameBox.TabIndex = 3;
@@ -122,11 +123,26 @@
             this.btnXMLSearch.Visible = false;
             this.btnXMLSearch.Click += new System.EventHandler(this.btnXMLSearch_Click);
             // 
+            // ThreadResultBox
+            // 
+            this.ThreadResultBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.ThreadResultBox.Location = new System.Drawing.Point(397, 12);
+            this.ThreadResultBox.MaximumSize = new System.Drawing.Size(310, 155);
+            this.ThreadResultBox.MaxLength = 500000000;
+            this.ThreadResultBox.Multiline = true;
+            this.ThreadResultBox.Name = "ThreadResultBox";
+            this.ThreadResultBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.ThreadResultBox.Size = new System.Drawing.Size(310, 155);
+            this.ThreadResultBox.TabIndex = 8;
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(721, 702);
+            this.Controls.Add(this.ThreadResultBox);
             this.Controls.Add(this.btnXMLSearch);
             this.Controls.Add(this.btnStop);
             this.Controls.Add(this.ProcessProgress);
@@ -153,6 +169,7 @@
         private ProgressBarWithCaption ProcessProgress;
         private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.Button btnXMLSearch;
+        private System.Windows.Forms.TextBox ThreadResultBox;
     }
 }
 

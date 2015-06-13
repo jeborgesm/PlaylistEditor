@@ -203,7 +203,8 @@ namespace PlaylistEditor
                             Int32 gameidLength = (gameidEndPos - 1) - gameidStPos;
                             GameID = ScrapeResponse.Substring(gameidStPos + 1, gameidLength - gameidMarkerEnd.Length);
 
-                            GameDetailResponse = HTTPHandler.HttpGetwithThreads("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID);
+                            string ThreadStatus = "";
+                            GameDetailResponse = HTTPHandler.HttpGetwithThreads("http://www.arcade-museum.com/game_detail.php?game_id=" + GameID, out ThreadStatus);
 
                             Description = ScrapeValue("Description</H2>", "<p>", GameDetailResponse);
 

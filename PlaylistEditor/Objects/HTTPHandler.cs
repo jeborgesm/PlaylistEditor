@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace PlaylistEditor
 {
@@ -24,103 +25,100 @@ namespace PlaylistEditor
                 //req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
                 System.Net.WebResponse resp = req.GetResponse();
                 System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+
+                RequestThreadsStatus(req);
+
                 return sr.ReadToEnd().Trim();
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return "";
             }
         }
 
         public static string HttpPost(string URI, string Parameters)
         {
-            //String ProxyString = "";
-            //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
-            req.UserAgent = Settings.Default.UserAgent;// "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
-
-            //req.Proxy = new System.Net.WebProxy(ProxyString, true);
-            //Add these, as we're doing a POST
-            req.ContentType = "application/x-www-form-urlencoded";
-            req.Method = "POST";
-            //We need to count how many bytes we're sending. Post'ed Faked Forms should be name=value&
-            byte[] bytes = System.Text.Encoding.ASCII.GetBytes(Parameters);
-            req.ContentLength = bytes.Length;
-            System.IO.Stream os = req.GetRequestStream();
-            os.Write(bytes, 0, bytes.Length); //Push it out there
-            os.Close();
-            System.Net.WebResponse resp = req.GetResponse();
-            if (resp == null) return null;
-            System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
-            return sr.ReadToEnd().Trim();
-        }
-
-        public static string HttpGetwithThreads(string URI)
-        {
             try
-            {
-                ServicePoint servicePoint = RequestThreads(URI);
-                ShowProperties(servicePoint);
-                int hashCode = servicePoint.GetHashCode();
-
-                // Create a new 'HttpWebRequest' object to the mentioned URL.
+            { 
+                //String ProxyString = "";
+                //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
-                req.UserAgent = Settings.Default.UserAgent;
+                req.UserAgent = Settings.Default.UserAgent;// "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
+                //req.Proxy = new System.Net.WebProxy(ProxyString, true);
+                //Add these, as we're doing a POST
+                req.ContentType = "application/x-www-form-urlencoded";
+                req.Method = "POST";
+                //We need to count how many bytes we're sending. Post'ed Faked Forms should be name=value&
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(Parameters);
+                req.ContentLength = bytes.Length;
+                System.IO.Stream os = req.GetRequestStream();
+                os.Write(bytes, 0, bytes.Length); //Push it out there
+                os.Close();
                 System.Net.WebResponse resp = req.GetResponse();
-
-                // Display new service point properties. 
-                RequestThreadsStatus(req, hashCode);
-
+                if (resp == null) return null;
                 System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+
+                RequestThreadsStatus(req);
+
                 return sr.ReadToEnd().Trim();
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
+                return "";
+            }
+        }
+
+        public static string HttpGetwithThreads(string URI, out string ThreadStatus)
+        {
+            try
+            {
+                ServicePoint servicePoint = RequestThreads(URI);
+                ThreadStatus = ShowProperties(servicePoint);
+                int hashCode = servicePoint.GetHashCode();
+
+                return HttpGet(URI);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                ThreadStatus = "";
                 return "";
             }
         }
 
         public static string HttpPostwithThreads(string URI, string Parameters)
         {
-            ServicePoint servicePoint = RequestThreads(URI);
-            int hashCode = servicePoint.GetHashCode();
-            ShowProperties(servicePoint);
+            try
+            {
+                ServicePoint servicePoint = RequestThreads(URI);
+                int hashCode = servicePoint.GetHashCode();
+                ShowProperties(servicePoint);
 
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
-            req.UserAgent = Settings.Default.UserAgent;
-
-            req.ContentType = "application/x-www-form-urlencoded";
-            req.Method = "POST";
-
-            byte[] bytes = System.Text.Encoding.ASCII.GetBytes(Parameters);
-            req.ContentLength = bytes.Length;
-            System.IO.Stream os = req.GetRequestStream();
-            os.Write(bytes, 0, bytes.Length); //Push it out there
-            os.Close();
-            System.Net.WebResponse resp = req.GetResponse();
-
-            // Display new service point properties. 
-            RequestThreadsStatus(req, hashCode);
-
-            if (resp == null) return null;
-            System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
-            return sr.ReadToEnd().Trim();
+                return HttpPost(URI, Parameters);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return "";
+            }
         }
 
         public static ServicePoint RequestThreads(string URL) 
         {
-            ServicePointManager.MaxServicePoints = 5;
-            ServicePointManager.MaxServicePointIdleTime = 5000;
-            ServicePointManager.UseNagleAlgorithm = true;
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.CheckCertificateRevocationList = true;
-            ServicePointManager.DefaultConnectionLimit = 20;//ServicePointManager.DefaultPersistentConnectionLimit;
+            ServicePointManager.MaxServicePoints = Settings.Default.SPM_MaxServicePoints;
+            ServicePointManager.MaxServicePointIdleTime = Settings.Default.SPM_MaxServicePointIdleTime;
+            ServicePointManager.UseNagleAlgorithm = Settings.Default.SPM_UseNagleAlgorithm;
+            ServicePointManager.Expect100Continue = Settings.Default.SPM_Expect100Continue;
+            ServicePointManager.CheckCertificateRevocationList = Settings.Default.SPM_CheckCertificateRevocationList;
+            ServicePointManager.DefaultConnectionLimit = Settings.Default.SPM_DefaultConnectionLimit;//ServicePointManager.DefaultPersistentConnectionLimit;
             ServicePoint servicePoint = ServicePointManager.FindServicePoint(new Uri("http://" + (new Uri(URL).Host)));
             return servicePoint;
         }
 
-        public static void RequestThreadsStatus(HttpWebRequest req, int hashCode)
+        public static void RequestThreadsStatus(HttpWebRequest req)//, int hashCode)
         {
             #if DEBUG
             ServicePoint currentServicePoint = req.ServicePoint;
@@ -133,21 +131,21 @@ namespace PlaylistEditor
             Console.WriteLine("New service point is idle since " + currentServicePoint.IdleSince);
 
             // Check that a new ServicePoint instance has been created. 
-            if (hashCode == currentHashCode)
-                Console.WriteLine("Service point reused.");
-            else
-                Console.WriteLine("A new service point created.");
+            //if (hashCode == currentHashCode)
+            //    Console.WriteLine("Service point reused.");
+            //else
+            //    Console.WriteLine("A new service point created.");
             #endif
         }
 
-        private static void ShowProperties(ServicePoint sp)
+        private static string ShowProperties(ServicePoint sp)
         {
             #if DEBUG
             Console.WriteLine("Done calling FindServicePoint()...");
 
             // Display the ServicePoint Internet resource address.
             Console.WriteLine("Address = {0} ", sp.Address.ToString());
-
+            
             // Display the date and time that the ServicePoint was last  
             // connected to a host.
             Console.WriteLine("IdleSince = " + sp.IdleSince.ToString());
@@ -183,6 +181,16 @@ namespace PlaylistEditor
             Console.WriteLine("UseNagleAlgorithm = " + sp.UseNagleAlgorithm.ToString());
             Console.WriteLine("Expect 100-continue = " + sp.Expect100Continue.ToString());
             #endif
+
+            StringBuilder SB = new StringBuilder();
+            SB.AppendLine("Address = " + sp.Address.ToString());
+            SB.AppendLine("ConnectionLimit = " + sp.ConnectionLimit);
+            SB.AppendLine("CurrentConnections = " + sp.CurrentConnections);
+            SB.AppendLine("Service point hashcode: " + sp.GetHashCode());
+            SB.AppendLine("Service point max idle time: " + sp.MaxIdleTime);
+            SB.AppendLine("Service point is idle since " + sp.IdleSince);
+
+            return SB.ToString();
         }
 
         /// <summary>

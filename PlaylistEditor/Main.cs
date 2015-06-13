@@ -80,6 +80,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                Console.WriteLine(excpt.Message);
             }
         }
 
@@ -125,7 +126,13 @@ namespace PlaylistEditor
                         }
 
                         Debug.WriteLine(f);
-                        String ScrapeResponse = HTTPHandler.HttpGetwithThreads("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f));
+                        String ThreadStatus = "";
+                        String ScrapeResponse = HTTPHandler.HttpGetwithThreads("http://www.mamedb.com/game/" + Path.GetFileNameWithoutExtension(f), out ThreadStatus);
+
+                        ThreadResultBox.Invoke((MethodInvoker)delegate
+                        {
+                            ThreadResultBox.Text = ThreadStatus;
+                        });
 
                         if (ScrapeResponse != "")
                         {
@@ -135,6 +142,7 @@ namespace PlaylistEditor
                             String TitleMarkerStart = "<table border='0' cellspacing='25'><tr><td><h1>";
                             String TitleMarkerEnd = "</h1>";
 
+                            
                             game.name = ScrapeHandler.ScrapeValue(TitleMarkerStart, TitleMarkerEnd, ScrapeResponse).Replace("(MAME version 0.147)", "").Trim();
 
                             if (game.name != "")

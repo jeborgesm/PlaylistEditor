@@ -8,5 +8,23 @@
     <Setting Name="UserAgent" Type="System.String" Scope="User">
       <Value Profile="(Default)">Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0</Value>
     </Setting>
+    <Setting Name="SPM_MaxServicePoints" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="SPM_MaxServicePointIdleTime" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5000</Value>
+    </Setting>
+    <Setting Name="SPM_UseNagleAlgorithm" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="SPM_Expect100Continue" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="SPM_CheckCertificateRevocationList" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="SPM_DefaultConnectionLimit" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">15</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
