@@ -50,6 +50,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                ErrorHandler.ErrorRoutine(false, excpt); 
                 ResultsBox.Text += excpt.Message + Environment.NewLine;
             }
         }
@@ -67,6 +68,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                ErrorHandler.ErrorRoutine(false, excpt); 
                 ResultsBox.Text += excpt.Message + Environment.NewLine;
             }
         }
@@ -80,6 +82,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                ErrorHandler.ErrorRoutine(false, excpt); 
                 Console.WriteLine(excpt.Message);
             }
         }
@@ -195,6 +198,8 @@ namespace PlaylistEditor
                 catch (OperationCanceledException e)
                 {
                     Console.WriteLine(e.Message);
+
+                    ErrorHandler.ErrorRoutine(false, e); 
                 }
                 finally
                 {
@@ -210,6 +215,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                ErrorHandler.ErrorRoutine(false, excpt); 
                 if (ResultsBox.IsHandleCreated == true)
                 {
                     //Refresh the Results Box by invoking it on the main window thread
@@ -239,6 +245,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                ErrorHandler.ErrorRoutine(false, excpt); 
                 Console.WriteLine(excpt.Message);
             }
         }

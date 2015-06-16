@@ -102,6 +102,7 @@
     <Compile Include="FormsContainer.Designer.cs">
       <DependentUpon>FormsContainer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Objects\ErrorHandler.cs" />
     <Compile Include="Objects\Game.cs" />
     <Compile Include="Main.cs">
       <SubType>Form</SubType>

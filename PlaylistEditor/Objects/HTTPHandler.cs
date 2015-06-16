@@ -1,11 +1,8 @@
 ﻿using PlaylistEditor.Properties;
 using System;
-using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
-using System.Threading;
-using System.Windows.Forms;
 
 namespace PlaylistEditor
 {
@@ -20,18 +17,22 @@ namespace PlaylistEditor
 
                 // Create a new 'HttpWebRequest' object to the mentioned URL.
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
+                req.Proxy = null;
                 req.UserAgent = Settings.Default.UserAgent;//"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
                 //req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
-                System.Net.WebResponse resp = req.GetResponse();
-                System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+                using (System.Net.WebResponse resp = req.GetResponse())
+                {
+                    System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
 
-                RequestThreadsStatus(req);
+                    RequestThreadsStatus(req);
 
-                return sr.ReadToEnd().Trim();
+                    return sr.ReadToEnd().Trim();
+                }
             }
             catch (Exception ex)
             {
+                ErrorHandler.ErrorRoutine(false, ex); 
                 Console.WriteLine(ex.Message);
                 return "";
             }
@@ -44,6 +45,7 @@ namespace PlaylistEditor
                 //String ProxyString = "";
                 //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
+                req.Proxy = null;
                 req.UserAgent = Settings.Default.UserAgent;// "Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
                 //req.Proxy = new System.Net.WebProxy(ProxyString, true);
@@ -56,16 +58,19 @@ namespace PlaylistEditor
                 System.IO.Stream os = req.GetRequestStream();
                 os.Write(bytes, 0, bytes.Length); //Push it out there
                 os.Close();
-                System.Net.WebResponse resp = req.GetResponse();
-                if (resp == null) return null;
-                System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
+                using (System.Net.WebResponse resp = req.GetResponse())
+                {
+                    if (resp == null) return null;
+                    System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
 
-                RequestThreadsStatus(req);
+                    RequestThreadsStatus(req);
 
-                return sr.ReadToEnd().Trim();
+                    return sr.ReadToEnd().Trim();
+                }
             }
             catch (Exception ex)
             {
+                ErrorHandler.ErrorRoutine(false, ex); 
                 Console.WriteLine(ex.Message);
                 return "";
             }
@@ -83,6 +88,7 @@ namespace PlaylistEditor
             }
             catch (Exception ex)
             {
+                ErrorHandler.ErrorRoutine(false, ex); 
                 Console.WriteLine(ex.Message);
                 ThreadStatus = "";
                 return "";
@@ -101,6 +107,7 @@ namespace PlaylistEditor
             }
             catch (Exception ex)
             {
+                ErrorHandler.ErrorRoutine(false, ex); 
                 Console.WriteLine(ex.Message);
                 return "";
             }

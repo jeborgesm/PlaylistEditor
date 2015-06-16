@@ -54,6 +54,7 @@ namespace PlaylistEditor
             }
             catch (Exception ex)
             {
+                ErrorHandler.ErrorRoutine(false, ex); 
                 return "";
             }
         }
@@ -158,6 +159,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                ErrorHandler.ErrorRoutine(false, excpt); 
                 Console.WriteLine(excpt.Message);
             }
             return game;
@@ -246,6 +248,7 @@ namespace PlaylistEditor
             }
             catch (System.Exception excpt)
             {
+                ErrorHandler.ErrorRoutine(false, excpt); 
                 Console.WriteLine(excpt.Message);
             }
             return game;
@@ -318,6 +321,7 @@ namespace PlaylistEditor
             }
             catch (Exception ex)
             {
+                ErrorHandler.ErrorRoutine(false, ex); 
                 return "";
             }
         }
