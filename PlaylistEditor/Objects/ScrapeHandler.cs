@@ -13,50 +13,29 @@ namespace PlaylistEditor
         public static string getimage(string inHtml, string fileName)
         {
             fileName = Path.GetFileNameWithoutExtension(fileName);
+            string foundpath = "";
             try
             {
-                string foundpath = "";
-
                 if (Directory.Exists("mame") == false)
                 {
                     Directory.CreateDirectory("mame");
                 }
 
-                ServicePoint servicePoint = HTTPHandler.RequestThreads("http://www.mamedb.com");
-
-                using (WebClient webClient = new WebClient())
+                using(Image ScrapedImage = HTTPHandler.getimage("http://www.mamedb.com/titles/" + fileName + ".png"))
                 {
-                    byte[] data = webClient.DownloadData("http://www.mamedb.com/titles/" + fileName + ".png");
-
-                    if (data.Length > 0)
+                    if (ScrapedImage != null)
                     {
-                        using (MemoryStream mem = new MemoryStream(data))
-                        {
-                            var yourImage = Image.FromStream(mem);
-
-                            ///mame/sf2049-image.jpg/
-                            //if (yourImage.RawFormat == ImageFormat.Jpeg)
-                            //{
-                            // If you want it as Png
-                            foundpath = "mame/" + fileName + "-image.png";
-                            yourImage.Save(foundpath, ImageFormat.Png);
-                            //}
-                            //else if (yourImage.RawFormat == ImageFormat.Png)
-                            //{
-                            //    // If you want it as Jpeg
-                            //    foundpath = "mame/" + fileName + "-image.jpg";
-                            //    yourImage.Save(foundpath, ImageFormat.Jpeg);
-                            //}
-                        }
+                        foundpath = "mame/" + fileName + "-image.png";
+                        ScrapedImage.Save(foundpath, ImageFormat.Png);
                     }
-                }
-                return foundpath;
+                } 
             }
             catch (Exception ex)
             {
                 ErrorHandler.ErrorRoutine(false, ex); 
                 return "";
             }
+            return foundpath;
         }
 
         public void getRating(string inHtml)

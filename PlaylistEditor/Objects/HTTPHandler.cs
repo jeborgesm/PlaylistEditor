@@ -1,5 +1,7 @@
 ﻿using PlaylistEditor.Properties;
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -10,24 +12,34 @@ namespace PlaylistEditor
     {
         public static string HttpGet(string URI)
         {
+            string getresult = "";
             try
             {
                 //String ProxyString = "";
                 //System.Net.WebRequest req = System.Net.WebRequest.Create(URI);
 
                 // Create a new 'HttpWebRequest' object to the mentioned URL.
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(URI);
+                HttpWebRequest req = HttpWebRequest.CreateHttp(URI);
                 req.Proxy = null;
                 req.UserAgent = Settings.Default.UserAgent;//"Mozilla/5.0 (Windows NT 6.3; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0";
 
                 //req.Proxy = new System.Net.WebProxy(ProxyString, true); //true means no proxy
-                using (System.Net.WebResponse resp = req.GetResponse())
+                using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
                 {
+                    if (resp.StatusCode != HttpStatusCode.OK || resp.StatusCode == HttpStatusCode.NotFound) return "";
                     System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
 
                     RequestThreadsStatus(req);
 
-                    return sr.ReadToEnd().Trim();
+                    getresult = sr.ReadToEnd().Trim();
+                }
+            }
+            catch(WebException we)
+            {
+                HttpWebResponse errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return "";
                 }
             }
             catch (Exception ex)
@@ -36,10 +48,12 @@ namespace PlaylistEditor
                 Console.WriteLine(ex.Message);
                 return "";
             }
+            return getresult;
         }
 
         public static string HttpPost(string URI, string Parameters)
         {
+            string postresult = "";
             try
             { 
                 //String ProxyString = "";
@@ -60,12 +74,20 @@ namespace PlaylistEditor
                 os.Close();
                 using (System.Net.WebResponse resp = req.GetResponse())
                 {
-                    if (resp == null) return null;
+                    if (resp == null || ((HttpWebResponse)resp).StatusCode == HttpStatusCode.NotFound) return "";
                     System.IO.StreamReader sr = new System.IO.StreamReader(resp.GetResponseStream());
 
                     RequestThreadsStatus(req);
 
-                    return sr.ReadToEnd().Trim();
+                    postresult = sr.ReadToEnd().Trim();
+                }
+            }
+            catch (WebException we)
+            {
+                HttpWebResponse errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return "";
                 }
             }
             catch (Exception ex)
@@ -74,6 +96,43 @@ namespace PlaylistEditor
                 Console.WriteLine(ex.Message);
                 return "";
             }
+            return postresult;
+        }
+
+        public static Image getimage(string fileURL)
+        {
+            Image ImageResult = null;
+            try
+            {
+                ServicePoint servicePoint = HTTPHandler.RequestThreads(fileURL);
+
+                using (WebClient webClient = new WebClient())
+                {
+                    byte[] data = webClient.DownloadData(fileURL);
+
+                    if (data.Length > 0)
+                    {
+                        using (MemoryStream mem = new MemoryStream(data))
+                        {
+                            Image yourImage = Image.FromStream(mem);
+                        }
+                    }
+                }
+            }
+            catch (WebException we)
+            {
+                HttpWebResponse errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorHandler.ErrorRoutine(false, ex);
+                return null;
+            }
+            return ImageResult;
         }
 
         public static string HttpGetwithThreads(string URI, out string ThreadStatus)
