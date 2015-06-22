@@ -191,9 +191,9 @@ namespace PlaylistEditor
 
                             if (game.image == null)
                             {
-                                string img = ScrapeValue("Title screen image", ".png", GameDetailResponse);
-                                img = img.Substring(img.IndexOf("images/"));
-                                string imagepath = SaveImage("http://www.arcade-museum.com/" + img + ".png", Path.GetFileNameWithoutExtension(game.path));
+                                string img = ScrapeValue("Title screen image", " WIDTH", GameDetailResponse);
+                                img = img.Substring(img.IndexOf("images/")).Replace("\"","");
+                                string imagepath = SaveImage("http://www.arcade-museum.com/" + img , Path.GetFileNameWithoutExtension(game.path));
                                 if (imagepath != "")
                                 {
                                     game.image = "~/.emulationstation/downloaded_images/" + imagepath;
@@ -235,29 +235,36 @@ namespace PlaylistEditor
 
         public static string ScrapeValue(string MarkerStart, string MarkerEnd, string inHtml)
         {
-            Int32 respLength = inHtml.Length;
-            Int32 descStPos = inHtml.IndexOf(MarkerStart) + MarkerStart.Length;
-
-            Int32 descEndPos = descStPos;
-
-            if (descEndPos < respLength)
+            try
             {
-                while (inHtml.Substring(descEndPos, MarkerEnd.Length) != MarkerEnd)
-                {
-                    descEndPos++;
-                }
+                Int32 htmlLength = inHtml.Length;
+                Int32 StPos = inHtml.IndexOf(MarkerStart) + MarkerStart.Length;
 
-                if (descStPos < descEndPos)
+                Int32 EndPos = StPos;
+
+                if (htmlLength > EndPos)
                 {
-                    Int32 DescLength = descEndPos - descStPos;
-                    return inHtml.Substring(descStPos, DescLength);
+                    while ((inHtml.Substring(EndPos, MarkerEnd.Length) != MarkerEnd) && (EndPos+ MarkerEnd.Length < htmlLength))
+                    {
+                        EndPos++;
+                    }
+
+                    Int32 valLength = EndPos - StPos;
+                    if (htmlLength > (htmlLength - (StPos + valLength)))
+                    {
+                        return inHtml.Substring(StPos, valLength);
+                    }
+                    else
+                    {
+                        return "";
+                    }
                 }
                 else
                 {
                     return "";
                 }
             }
-            else
+            catch (Exception ex)
             {
                 return "";
             }

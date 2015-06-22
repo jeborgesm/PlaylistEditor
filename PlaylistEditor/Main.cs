@@ -73,12 +73,20 @@ namespace PlaylistEditor
             }
         }
 
+        private delegate void SetStatusDelegate(string status);
         private void SetStatus(string status)
         {
             try
             {
-                ToolStripStatusLabel statusStrip = ((FormsContainer)(this.MdiParent)).toolStripStatusLabel;
-                statusStrip.Text = status;
+                FormsContainer frmParent = ((FormsContainer)(this.MdiParent));
+
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new SetStatusDelegate(SetStatus), new object[] { status });
+                    return;
+                }
+
+                frmParent.toolStripStatusLabel.Text = status;
             }
             catch (System.Exception excpt)
             {
