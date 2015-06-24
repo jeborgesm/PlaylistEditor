@@ -169,7 +169,7 @@ namespace PlaylistEditor
                                     cleanName = game.name.Replace(":", "");
                                 }
 
-                                string imagepath = ScrapeHandler.getimage("", game.path);
+                                string imagepath = ScrapeHandler.getImage("http://www.mamedb.com/titles/" + Path.GetFileNameWithoutExtension(game.path) + ".png", game.path);
                                 if (imagepath != "")
                                 {
                                     game.image = "~/.emulationstation/downloaded_images/" + imagepath;

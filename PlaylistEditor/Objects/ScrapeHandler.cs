@@ -10,9 +10,36 @@ namespace PlaylistEditor
 {
     class ScrapeHandler
     {
-        public static string getimage(string inHtml, string fileName)
+        //public static string getimage(string imageURL, string fileName)
+        //{
+        //    fileName = Path.GetFileNameWithoutExtension(fileName);
+        //    string foundpath = "";
+        //    try
+        //    {
+        //        if (Directory.Exists("mame") == false)
+        //        {
+        //            Directory.CreateDirectory("mame");
+        //        }
+
+        //        using (Image ScrapedImage = HTTPHandler.getimage(imageURL))
+        //        {
+        //            if (ScrapedImage != null)
+        //            {
+        //                foundpath = "mame/" + fileName + "-image.png";
+        //                ScrapedImage.Save(foundpath, ImageFormat.Png);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        ErrorHandler.ErrorRoutine(false, ex);
+        //        return "";
+        //    }
+        //    return foundpath;
+        //}
+
+        public static string getImage(string sourceFilePath, string savefileName)
         {
-            fileName = Path.GetFileNameWithoutExtension(fileName);
             string foundpath = "";
             try
             {
@@ -21,18 +48,40 @@ namespace PlaylistEditor
                     Directory.CreateDirectory("mame");
                 }
 
-                using(Image ScrapedImage = HTTPHandler.getimage("http://www.mamedb.com/titles/" + fileName + ".png"))
+                ServicePoint servicePoint = HTTPHandler.RequestThreads(sourceFilePath);
+
+                HttpWebRequest lxRequest = (HttpWebRequest)WebRequest.Create(sourceFilePath);
+                lxRequest.UserAgent = Settings.Default.UserAgent;
+
+                using (HttpWebResponse lxResponse = (HttpWebResponse)lxRequest.GetResponse())
                 {
-                    if (ScrapedImage != null)
+                    using (BinaryReader reader = new BinaryReader(lxResponse.GetResponseStream()))
                     {
-                        foundpath = "mame/" + fileName + "-image.png";
-                        ScrapedImage.Save(foundpath, ImageFormat.Png);
+                        Byte[] data = reader.ReadBytes(1 * 1024 * 1024 * 10);
+                        if (data.Length > 0)
+                        {
+                            using (MemoryStream mem = new MemoryStream(data))
+                            {
+                                var yourImage = Image.FromStream(mem);
+
+                                foundpath = "mame/" + savefileName + "-image.png";
+                                yourImage.Save(foundpath, ImageFormat.Png);
+                            }
+                        }
                     }
-                } 
+                }
+            }
+            catch (WebException we)
+            {
+                HttpWebResponse errorResponse = we.Response as HttpWebResponse;
+                if (errorResponse.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return "";
+                }
             }
             catch (Exception ex)
             {
-                ErrorHandler.ErrorRoutine(false, ex); 
+                ErrorHandler.ErrorRoutine(false, ex);
                 return "";
             }
             return foundpath;
@@ -193,7 +242,7 @@ namespace PlaylistEditor
                             {
                                 string img = ScrapeValue("Title screen image", " WIDTH", GameDetailResponse);
                                 img = img.Substring(img.IndexOf("images/")).Replace("\"","");
-                                string imagepath = SaveImage("http://www.arcade-museum.com/" + img , Path.GetFileNameWithoutExtension(game.path));
+                                string imagepath = getImage("http://www.arcade-museum.com/" + img , Path.GetFileNameWithoutExtension(game.path));
                                 if (imagepath != "")
                                 {
                                     game.image = "~/.emulationstation/downloaded_images/" + imagepath;
@@ -266,48 +315,6 @@ namespace PlaylistEditor
             }
             catch (Exception ex)
             {
-                return "";
-            }
-        }
-
-        public static string SaveImage(string sourceFilePath, string savefileName)
-        {
-            try
-            {
-                string foundpath = "";
-
-                if (Directory.Exists("mame") == false)
-                {
-                    Directory.CreateDirectory("mame");
-                }
-
-                ServicePoint servicePoint = HTTPHandler.RequestThreads(sourceFilePath);
-
-                HttpWebRequest lxRequest = (HttpWebRequest)WebRequest.Create(sourceFilePath);
-                lxRequest.UserAgent = Settings.Default.UserAgent;
-
-                using (HttpWebResponse lxResponse = (HttpWebResponse)lxRequest.GetResponse())
-                {
-                    using (BinaryReader reader = new BinaryReader(lxResponse.GetResponseStream()))
-                    {
-                        Byte[] data = reader.ReadBytes(1 * 1024 * 1024 * 10);
-                        if (data.Length > 0)
-                        {
-                            using (MemoryStream mem = new MemoryStream(data))
-                            {
-                                var yourImage = Image.FromStream(mem);
-
-                                foundpath = "mame/" + savefileName + "-image.png";
-                                yourImage.Save(foundpath, ImageFormat.Png);
-                            }
-                        }
-                    }
-                }
-                return foundpath;
-            }
-            catch (Exception ex)
-            {
-                ErrorHandler.ErrorRoutine(false, ex); 
                 return "";
             }
         }
