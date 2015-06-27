@@ -27,54 +27,54 @@ namespace PlaylistEditor
         private void btnOpenXML_Click(object sender, EventArgs e)
         {
             schema = InferXMLSchema("gamelist.xml");
- 
+
             doc = new XmlDataDocument();
             doc.DataSet.ReadXml("gamelist.xml");
- 
+
             ConstructGUI(doc.DataSet);
         }
- 
+
         private XmlSchema InferXMLSchema(string filename)
         {
             XmlSchema infSchema = null;
             XmlReader reader = XmlReader.Create(filename);
- 
+
             XmlSchemaSet schemaSet = new XmlSchemaSet();
             XmlSchemaInference inference = new XmlSchemaInference();
- 
+
             schemaSet = inference.InferSchema(reader);
- 
+
             foreach (XmlSchema sch in schemaSet.Schemas())
             {
                 infSchema = sch;
             }
             return infSchema;
         }
- 
+
         private void ConstructGUI(DataSet dataSet)
         {
             Point pos = new Point(10, 10);
- 
+
             foreach (DataTable dt in dataSet.Tables)
             {
                 if (dt.ParentRelations.Count == 0)
                 {
                     XmlSchemaElement el = GetGlobalElement(dataSet.DataSetName);
                     XmlSchemaComplexType ct = (XmlSchemaComplexType)el.ElementSchemaType;
- 
+
                     pnlDynForm.Controls.Clear();
                     Point p2 = ConstructGUI(pos.X, pos.Y, dt, pnlDynForm, ct);
                     pos.Y += p2.Y;
                 }
             }
         }
- 
+
         private Point ConstructGUI(int absx, int absy, DataTable dt, Control gbParent, XmlSchemaComplexType ct)
         {
             try
             {
                 int rowcount = 0;
-                foreach(DataRow row in dt.Rows)
+                foreach (DataRow row in dt.Rows)
                 {
                     if (rowcount < 100)
                     {
@@ -113,7 +113,7 @@ namespace PlaylistEditor
             }
             return new Point();
         }
- 
+
         private Label CreateLabel(int absx, int absy, string txt, Control ctrlParent)
         {
             try
@@ -134,7 +134,7 @@ namespace PlaylistEditor
                 return new Label();
             }
         }
- 
+
         private TextBox CreateTextBox(int absx, int absy, string txt, Control ctrlParent)
         {
             try
@@ -157,14 +157,14 @@ namespace PlaylistEditor
                 return new TextBox();
             }
         }
- 
+
         private XmlSchemaElement GetGlobalElement(string name)
         {
             XmlQualifiedName qname = new XmlQualifiedName(name, schema.TargetNamespace);
             XmlSchemaObject obj = schema.Elements[qname];
             return (XmlSchemaElement)obj;
         }
- 
+
         private XmlSchemaComplexType GetGlobalComplexType(string name)
         {
             for (int i = 0; i < schema.Items.Count; i++)
@@ -179,6 +179,17 @@ namespace PlaylistEditor
                 }
             }
             return null;
+        }
+
+        private void btnParseHTMLXPath_Click(object sender, EventArgs e)
+        {
+            string ThreadStatus = "";
+            string GameDetailResponse = HTTPHandler.HttpGetwithThreads("http://www.arcade-museum.com/game_detail.php?game_id=" + "9803", out ThreadStatus);
+
+            string Description = ScrapeHandler.ScrapeValueXPath(GameDetailResponse, "//center[1]/table[1]/tr[1]/td[1]/p");
+            
+            CreateTextBox(10, 10, ThreadStatus, this.pnlDynForm);
+            CreateTextBox(10, 50, Description, this.pnlDynForm);
         }
     }
 }

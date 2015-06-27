@@ -171,6 +171,10 @@
       <Project>{6c521975-cd15-4c59-a720-2dbb7f52c3aa}</Project>
       <Name>ProgressBarWithCaption</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SGMLReader\SgmlReader.csproj">
+      <Project>{499527ff-ae52-450f-b3e3-4ad53e1712ad}</Project>
+      <Name>SgmlReader</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

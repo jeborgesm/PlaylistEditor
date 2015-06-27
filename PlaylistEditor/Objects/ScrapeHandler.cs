@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Web;
+using System.Xml;
 
 namespace PlaylistEditor
 {
@@ -317,6 +318,20 @@ namespace PlaylistEditor
             {
                 return "";
             }
+        }
+
+        public static string ScrapeValueXPath(string inhtml, string XPathNode)
+        {
+            string result = "";
+            using(TextReader tr = new StringReader(inhtml))
+            {
+                XmlDocument htmldoc = XMLHandler.HTMLtoXML(tr);
+                XmlNode foundNode = htmldoc.SelectSingleNode(XPathNode);
+                if (foundNode != null)
+                    result = foundNode.InnerText;
+            }
+
+            return result;
         }
     }
 }

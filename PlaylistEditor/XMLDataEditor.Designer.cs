@@ -30,6 +30,7 @@
         {
             this.btnOpenXML = new System.Windows.Forms.Button();
             this.pnlDynForm = new System.Windows.Forms.Panel();
+            this.btnParseHTMLXPath = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnOpenXML
@@ -53,11 +54,22 @@
             this.pnlDynForm.Size = new System.Drawing.Size(604, 497);
             this.pnlDynForm.TabIndex = 1;
             // 
+            // btnParseHTMLXPath
+            // 
+            this.btnParseHTMLXPath.Location = new System.Drawing.Point(182, 12);
+            this.btnParseHTMLXPath.Name = "btnParseHTMLXPath";
+            this.btnParseHTMLXPath.Size = new System.Drawing.Size(149, 28);
+            this.btnParseHTMLXPath.TabIndex = 2;
+            this.btnParseHTMLXPath.Text = "Parse HTML XPath";
+            this.btnParseHTMLXPath.UseVisualStyleBackColor = true;
+            this.btnParseHTMLXPath.Click += new System.EventHandler(this.btnParseHTMLXPath_Click);
+            // 
             // XMLDataEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(602, 544);
+            this.Controls.Add(this.btnParseHTMLXPath);
             this.Controls.Add(this.pnlDynForm);
             this.Controls.Add(this.btnOpenXML);
             this.Name = "XMLDataEditor";
@@ -71,5 +83,6 @@
 
         private System.Windows.Forms.Button btnOpenXML;
         private System.Windows.Forms.Panel pnlDynForm;
+        private System.Windows.Forms.Button btnParseHTMLXPath;
     }
 }
