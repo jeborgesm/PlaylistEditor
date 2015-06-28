@@ -150,5 +150,23 @@ namespace PlaylistEditor
                 this.MainMenuStrip.Items[0].Image = bmp;
             }
         }
+
+        private void xPathExtractorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var mainForm = new XPathExtractor();
+            mainForm.MdiParent = this;
+            mainForm.WindowState = FormWindowState.Maximized;
+            mainForm.Show();
+            LayoutMdi(MdiLayout.TileVertical);
+
+            if (ActiveMdiChild.Icon != null)
+            {
+                Bitmap bmp = new Bitmap(16, 16);
+                bmp.MakeTransparent();
+                using (Graphics gp = Graphics.FromImage(bmp))
+                    gp.DrawIcon(ActiveMdiChild.Icon, new Rectangle(0, 0, 16, 16));
+                this.MainMenuStrip.Items[0].Image = bmp;
+            }
+        }
     }
 }
