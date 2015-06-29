@@ -33,6 +33,7 @@
             this.menuStrip = new System.Windows.Forms.MenuStrip();
             this.fileMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.editXMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.xPathExtractorToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
@@ -57,6 +58,7 @@
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.xPathExtractorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.windowsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.newWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,7 +85,6 @@
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-            this.xPathExtractorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.statusStrip.SuspendLayout();
@@ -111,6 +112,7 @@
             // 
             this.fileMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.editXMLToolStripMenuItem,
+            this.xPathExtractorToolStripMenuItem1,
             this.newToolStripMenuItem,
             this.openToolStripMenuItem,
             this.toolStripSeparator3,
@@ -133,6 +135,13 @@
             this.editXMLToolStripMenuItem.Size = new System.Drawing.Size(179, 26);
             this.editXMLToolStripMenuItem.Text = "Edit XML";
             this.editXMLToolStripMenuItem.Click += new System.EventHandler(this.editXMLToolStripMenuItem_Click);
+            // 
+            // xPathExtractorToolStripMenuItem1
+            // 
+            this.xPathExtractorToolStripMenuItem1.Name = "xPathExtractorToolStripMenuItem1";
+            this.xPathExtractorToolStripMenuItem1.Size = new System.Drawing.Size(179, 26);
+            this.xPathExtractorToolStripMenuItem1.Text = "XPathExtractor";
+            this.xPathExtractorToolStripMenuItem1.Click += new System.EventHandler(this.xPathExtractorToolStripMenuItem_Click);
             // 
             // newToolStripMenuItem
             // 
@@ -341,6 +350,13 @@
             this.toolsMenu.Name = "toolsMenu";
             this.toolsMenu.Size = new System.Drawing.Size(57, 24);
             this.toolsMenu.Text = "&Tools";
+            // 
+            // xPathExtractorToolStripMenuItem
+            // 
+            this.xPathExtractorToolStripMenuItem.Name = "xPathExtractorToolStripMenuItem";
+            this.xPathExtractorToolStripMenuItem.Size = new System.Drawing.Size(179, 24);
+            this.xPathExtractorToolStripMenuItem.Text = "XPath Extractor";
+            this.xPathExtractorToolStripMenuItem.Click += new System.EventHandler(this.xPathExtractorToolStripMenuItem_Click);
             // 
             // optionsToolStripMenuItem
             // 
@@ -556,13 +572,6 @@
             this.toolStripStatusLabel.Size = new System.Drawing.Size(49, 20);
             this.toolStripStatusLabel.Text = "Status";
             // 
-            // xPathExtractorToolStripMenuItem
-            // 
-            this.xPathExtractorToolStripMenuItem.Name = "xPathExtractorToolStripMenuItem";
-            this.xPathExtractorToolStripMenuItem.Size = new System.Drawing.Size(179, 24);
-            this.xPathExtractorToolStripMenuItem.Text = "XPath Extractor";
-            this.xPathExtractorToolStripMenuItem.Click += new System.EventHandler(this.xPathExtractorToolStripMenuItem_Click);
-            // 
             // FormsContainer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -648,6 +657,7 @@
         private System.Windows.Forms.ToolTip toolTip;
         private System.Windows.Forms.ToolStripMenuItem editXMLToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem xPathExtractorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem xPathExtractorToolStripMenuItem1;
     }
 }
 
