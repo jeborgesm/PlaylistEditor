@@ -29,7 +29,8 @@
         private void InitializeComponent()
         {
             this.advancedWebBrowser1 = new AdvancedWebBrowser.AdvancedWebBrowser();
-            this.btnURL = new System.Windows.Forms.Button();
+            this.btnXPATH = new System.Windows.Forms.Button();
+            this.txtXPath = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // advancedWebBrowser1
@@ -43,23 +44,32 @@
             this.advancedWebBrowser1.Size = new System.Drawing.Size(576, 488);
             this.advancedWebBrowser1.TabIndex = 0;
             // 
-            // btnURL
+            // btnXPATH
             // 
-            this.btnURL.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnURL.Location = new System.Drawing.Point(12, 511);
-            this.btnURL.Name = "btnURL";
-            this.btnURL.Size = new System.Drawing.Size(75, 23);
-            this.btnURL.TabIndex = 1;
-            this.btnURL.Text = "URL";
-            this.btnURL.UseVisualStyleBackColor = true;
-            this.btnURL.Click += new System.EventHandler(this.btnURL_Click);
+            this.btnXPATH.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnXPATH.Location = new System.Drawing.Point(416, 493);
+            this.btnXPATH.Name = "btnXPATH";
+            this.btnXPATH.Size = new System.Drawing.Size(75, 23);
+            this.btnXPATH.TabIndex = 1;
+            this.btnXPATH.Text = "XPATH";
+            this.btnXPATH.UseVisualStyleBackColor = true;
+            this.btnXPATH.Click += new System.EventHandler(this.btnURL_Click);
+            // 
+            // txtXPath
+            // 
+            this.txtXPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.txtXPath.Location = new System.Drawing.Point(13, 494);
+            this.txtXPath.Name = "txtXPath";
+            this.txtXPath.Size = new System.Drawing.Size(397, 22);
+            this.txtXPath.TabIndex = 2;
             // 
             // XPathExtractor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(577, 546);
-            this.Controls.Add(this.btnURL);
+            this.Controls.Add(this.txtXPath);
+            this.Controls.Add(this.btnXPATH);
             this.Controls.Add(this.advancedWebBrowser1);
             this.Name = "XPathExtractor";
             this.Text = "XPathExtractor";
@@ -72,7 +82,8 @@
         #endregion
 
         private AdvancedWebBrowser.AdvancedWebBrowser advancedWebBrowser1;
-        private System.Windows.Forms.Button btnURL;
+        private System.Windows.Forms.Button btnXPATH;
+        private System.Windows.Forms.TextBox txtXPath;
 
     }
 }
