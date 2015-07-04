@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
@@ -186,12 +187,16 @@ namespace PlaylistEditor
             sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
             sgmlReader.CaseFolding = Sgml.CaseFolding.ToLower;
             sgmlReader.InputStream = reader;
+            //sgmlReader.IgnoreDtd = true;
+
+            string strXMLPattern = @"xmlns(:\w+)?="".+""";
+            string htmlCleaned = Regex.Replace(sgmlReader.ReadOuterXml(), strXMLPattern, "");
 
             // create document
             XmlDocument doc = new XmlDocument();
             doc.PreserveWhitespace = true;
             doc.XmlResolver = null;
-            doc.Load(sgmlReader);
+            doc.LoadXml(htmlCleaned);
             return doc;
         }
     }

@@ -1,11 +1,13 @@
 ﻿using PlaylistEditor.Properties;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Web;
 using System.Xml;
+using System.Xml.XPath;
 
 namespace PlaylistEditor
 {
@@ -326,6 +328,33 @@ namespace PlaylistEditor
             using(TextReader tr = new StringReader(inhtml))
             {
                 XmlDocument htmldoc = XMLHandler.HTMLtoXML(tr);
+
+                ///////////////////
+                //XPathDocument x = new XPathDocument(new StringReader(htmldoc.InnerXml));
+                //XPathNavigator xpathNav = x.CreateNavigator();
+                //xpathNav.MoveToFollowing(XPathNodeType.Element);
+                //IDictionary<string, string> docNSIS = xpathNav.GetNamespacesInScope(XmlNamespaceScope.All);
+
+                ////XmlDocument doc = new XmlDocument();
+                //XmlNamespaceManager namespaces = new XmlNamespaceManager(htmldoc.NameTable);
+
+                //foreach(var ns in docNSIS)
+                //{
+                //    namespaces.AddNamespace(ns.Key, ns.Value);
+                //}
+
+                //XPathNodeIterator xPathIt = xpathNav.Select(XPathNode);
+                //while (xPathIt.MoveNext())
+                //{
+                //    Console.WriteLine(xPathIt.Current.Value);
+                //}
+
+                ////namespaces.AddNamespace("ns", "urn:hl7-org:v3");
+                ////XmlNode idNode = htmldoc.SelectSingleNode("/My_RootNode/ns:id", namespaces);
+                //XmlNode idNode = htmldoc.SelectSingleNode(XPathNode, namespaces);
+
+                ///////////////////
+
                 XmlNode foundNode = htmldoc.SelectSingleNode(XPathNode);
                 if (foundNode != null)
                     result = foundNode.InnerText;

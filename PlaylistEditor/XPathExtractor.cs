@@ -29,13 +29,6 @@ namespace PlaylistEditor
             //wb.DocumentCompleted
         }
 
-        private void btnURL_Click(object sender, EventArgs e)
-        {
-            wb = this.advancedWebBrowser1.ActiveWebBrowser;
-            //MessageBox.Show(wb.Url.ToString());
-            MessageBox.Show(ScrapeHandler.ScrapeValueXPath(wb.DocumentText, this.txtXPath.Text));
-        }
-
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             this.Text = e.Url.ToString();
@@ -67,23 +60,31 @@ namespace PlaylistEditor
                 HtmlElement elem = element;
                 while(elem.Parent != null)
                 {
-                    if (element.TagName == element.Parent.TagName)
-                    {
-                        path = element.TagName + "[1]/" + path; 
-                    }
-                    else
-                    {
+                    //if (element.TagName == element.Parent.TagName)
+                    //{
+                    //    path = element.TagName + "[1]/" + path; 
+                    //}
+                    //else
+                    //{
                         path = element.Parent.TagName + "/" + path; 
-                    }
+                    //}
                     
                     elem = elem.Parent;
                 }
-                path = path.ToLower();
+                path = "/" + path.ToLower();
 
                 element.Style = style + "; background-color: #ffc;";
                 this.txtXPath.Text = path;
+                this.txtExtracted.Text = ScrapeHandler.ScrapeValueXPath(wb.DocumentText, path);
                 //this.Text = element.Id ?? "(no id)";
             }
+        }
+
+        private void btnXPATH_Click(object sender, EventArgs e)
+        {
+            wb = this.advancedWebBrowser1.ActiveWebBrowser;
+            //MessageBox.Show(wb.Url.ToString());
+            MessageBox.Show(ScrapeHandler.ScrapeValueXPath(wb.DocumentText, this.txtXPath.Text));
         }
 
 
