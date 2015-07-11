@@ -56,20 +56,59 @@ namespace PlaylistEditor
                 string style = element.Style;
                 this.elementStyles.Add(element, style);
 
-                string path = element.TagName;
                 HtmlElement elem = element;
+                string path = elem.TagName;
                 while(elem.Parent != null)
                 {
+                    //from actual node go to parent
+                    HtmlElement prnt = element.Parent;
+                    
+                    int chldcount = 1;
+                    //loop through all the children
+                    foreach (HtmlElement chld in prnt.Children)
+                    {
+                        //verify if the child is of the same type of the actual node
+                        if (elem.TagName == chld.TagName)
+                        {
+                            //if the child node is the same type but not equal add 1 to the path array and go to next child
+                            if (elem.InnerHtml != chld.InnerHtml)
+                            {
+                                ++chldcount;
+                                path = elem.TagName + "[" + chldcount + "]/" + path;
+                            }
+                            else//if the child node is equal to the actual node
+                            {
+                                //if the array is not empty add one to the path array and go to next parent
+                                if (chldcount > 1)
+                                {
+                                    ++chldcount;
+                                    path = elem.TagName + "[" + chldcount + "]/" + path;
+                                }
+                                else
+                                {
+                                    //if the array is empty add the item to the path and go to next parent
+                                    path = elem.TagName + "/" + path;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            path = elem.Parent.TagName + "/" + path; 
+                        }
+                    }
+
+                    //path = elem.Parent.TagName + "/" + path; 
+
+                    elem = elem.Parent;
+
                     //if (element.TagName == element.Parent.TagName)
                     //{
                     //    path = element.TagName + "[1]/" + path; 
                     //}
                     //else
                     //{
-                        path = element.Parent.TagName + "/" + path; 
+                    //path = elem.Parent.TagName + "/" + path; 
                     //}
-                    
-                    elem = elem.Parent;
                 }
                 path = "/" + path.ToLower();
 

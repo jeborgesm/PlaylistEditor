@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
@@ -189,8 +190,10 @@ namespace PlaylistEditor
             sgmlReader.InputStream = reader;
             //sgmlReader.IgnoreDtd = true;
 
-            string strXMLPattern = @"xmlns(:\w+)?="".+""";
-            string htmlCleaned = Regex.Replace(sgmlReader.ReadOuterXml(), strXMLPattern, "");
+            //string strXMLPattern = @"xmlns(:\w+)?="".+""";
+            //string htmlCleaned = Regex.Replace(sgmlReader.ReadOuterXml(), strXMLPattern, "");
+
+            string htmlCleaned = RemoveAllNamespaces(sgmlReader.ReadOuterXml());
 
             // create document
             XmlDocument doc = new XmlDocument();
@@ -198,6 +201,77 @@ namespace PlaylistEditor
             doc.XmlResolver = null;
             doc.LoadXml(htmlCleaned);
             return doc;
+        }
+
+        public static string FindXPath(XmlNode node)
+        {
+            StringBuilder builder = new StringBuilder();
+            while (node != null)
+            {
+                switch (node.NodeType)
+                {
+                    case XmlNodeType.Attribute:
+                        builder.Insert(0, "/@" + node.Name);
+                        node = ((XmlAttribute)node).OwnerElement;
+                        break;
+                    case XmlNodeType.Element:
+                        int index = FindElementIndex((XmlElement)node);
+                        builder.Insert(0, "/" + node.Name + "[" + index + "]");
+                        node = node.ParentNode;
+                        break;
+                    case XmlNodeType.Document:
+                        return builder.ToString();
+                    default:
+                        throw new ArgumentException("Only elements and attributes are supported");
+                }
+            }
+            throw new ArgumentException("Node was not in a document");
+        }
+
+        private static int FindElementIndex(XmlElement element)
+        {
+            XmlNode parentNode = element.ParentNode;
+            if (parentNode is XmlDocument)
+            {
+                return 1;
+            }
+            XmlElement parent = (XmlElement)parentNode;
+            int index = 1;
+            foreach (XmlNode candidate in parent.ChildNodes)
+            {
+                if (candidate is XmlElement && candidate.Name == element.Name)
+                {
+                    if (candidate == element)
+                    {
+                        return index;
+                    }
+                    index++;
+                }
+            }
+            throw new ArgumentException("Couldn't find element within parent");
+        }
+
+        public static string RemoveAllNamespaces(string xmlDocument)
+        {
+            XElement xmlDocumentWithoutNs = RemoveAllNamespaces(XElement.Parse(xmlDocument));
+
+            return xmlDocumentWithoutNs.ToString();
+        }
+
+        //Core recursion function
+        private static XElement RemoveAllNamespaces(XElement xmlDocument)
+        {
+            if (!xmlDocument.HasElements)
+            {
+                XElement xElement = new XElement(xmlDocument.Name.LocalName);
+                xElement.Value = xmlDocument.Value;
+
+                foreach (XAttribute attribute in xmlDocument.Attributes())
+                    xElement.Add(attribute);
+
+                return xElement;
+            }
+            return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
         }
     }
 }
