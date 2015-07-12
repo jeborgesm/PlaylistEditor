@@ -1,13 +1,12 @@
 ﻿using PlaylistEditor.Properties;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Web;
+using System.Windows.Forms;
 using System.Xml;
-using System.Xml.XPath;
 
 namespace PlaylistEditor
 {
@@ -359,6 +358,63 @@ namespace PlaylistEditor
                     XmlNode foundNode = htmldoc.SelectSingleNode(XPathNode);
                     if (foundNode != null)
                         result = foundNode.InnerText;
+                }
+            }
+            catch (System.Exception excpt)
+            {
+                ErrorHandler.ErrorRoutine(false, excpt);
+                Console.WriteLine(excpt.Message);
+            }
+            return result;
+        }
+
+        public static string ScrapeValueXPath(HtmlDocument hdoc, string XPathNode)
+        {
+            HtmlElementCollection elems = hdoc.All;
+            string result = "";
+            try
+            {
+                foreach (HtmlElement el in elems)
+                {
+                    //elemspath = elemspath + "/" + el.TagName;
+                    //if (selelement == el)
+                    //    break;
+                }
+
+                //using (TextReader tr = new StringReader(inhtml))
+                //{
+                //    XmlDocument htmldoc = XMLHandler.HTMLtoXML(tr);
+
+                //    XmlNode foundNode = htmldoc.SelectSingleNode(XPathNode);
+                //    if (foundNode != null)
+                //        result = foundNode.InnerText;
+                //}
+            }
+            catch (System.Exception excpt)
+            {
+                ErrorHandler.ErrorRoutine(false, excpt);
+                Console.WriteLine(excpt.Message);
+            }
+            return result;
+        }
+
+        public static string ScrapeValueListXPath(string inhtml, string XPathNode)
+        {
+            string result = "";
+            try
+            {
+                using (TextReader tr = new StringReader(inhtml))
+                {
+                    XmlDocument htmldoc = XMLHandler.HTMLtoXML(tr);
+
+                    XmlNodeList foundNodes = htmldoc.SelectNodes(XPathNode);
+                    if (foundNodes != null)
+                    { 
+                        foreach(XmlNode xnode in foundNodes)
+                        {
+                            result += xnode.InnerText + Environment.NewLine;
+                        }
+                    }
                 }
             }
             catch (System.Exception excpt)

@@ -188,7 +188,7 @@ namespace PlaylistEditor
             sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
             sgmlReader.CaseFolding = Sgml.CaseFolding.ToLower;
             sgmlReader.InputStream = reader;
-            //sgmlReader.IgnoreDtd = true;
+            sgmlReader.IgnoreDtd = true;
 
             //string strXMLPattern = @"xmlns(:\w+)?="".+""";
             //string htmlCleaned = Regex.Replace(sgmlReader.ReadOuterXml(), strXMLPattern, "");
@@ -273,5 +273,40 @@ namespace PlaylistEditor
             }
             return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
         }
+
+        public static XmlNodeList FullNodeList(XmlDocument xmldoc)
+        {
+            foreach (XmlNode xmlnode in xmldoc.ChildNodes)
+            {                    
+                if (xmlnode.NodeType == XmlNodeType.Element)
+                {
+                    XmlNode getchildren = getXMLChildren(xmlnode);
+                    if (getchildren != null)
+                    {
+                        xmldoc.AppendChild(getchildren);
+                    }
+                }
+            }
+            return xmldoc.ChildNodes;
+        }
+
+        private static XmlNode getXMLChildren(XmlNode inNode)
+        {
+            foreach (XmlNode xmlnode in inNode.ChildNodes)
+            {
+                if (xmlnode.NodeType == XmlNodeType.Element)
+                {
+                    inNode.AppendChild(xmlnode);
+                    Console.WriteLine(xmlnode.InnerXml);
+
+                    if (xmlnode.HasChildNodes)
+                    {
+                        inNode.AppendChild(getXMLChildren(xmlnode));
+                    }
+                }
+            }
+            return inNode;
+        }
+
     }
 }
