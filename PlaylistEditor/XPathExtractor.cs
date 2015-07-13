@@ -60,12 +60,15 @@ namespace PlaylistEditor
         {
             string elemXPath = "";
             string children = "";
+            List<string> ParentTagsList = new List<string>();
             List<string> TagsList = new List<string>();
 
             while (elem.Parent != null)
             {
                 //from actual node go to parent
                 HtmlElement prnt = elem.Parent;
+                ParentTagsList.Add(prnt.TagName);
+
                 children += "|" + prnt.TagName;
 
                 //loop through all the children
@@ -86,22 +89,22 @@ namespace PlaylistEditor
             {
                 if (tag == prevtag)
                 {
-                    if (tagcount == 1)
-                    {
-                        tagcount++;
-                        int prvtaglength = ("/" + tag + "/").Length;
-                        if (prvtaglength > elemXPath.Length - prvtaglength)
-                        {
-                            elemXPath = "/" + tag + "[" + tagcount + "]";
-                        }
-                        else
-                        {
-                            elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
-                            elemXPath = "/" + tag + "[" + tagcount + "]/" + elemXPath;
-                        }
-                    }
-                    else
-                    {
+                    //if (tagcount == 1)
+                    //{
+                    //    tagcount++;
+                    //    int prvtaglength = ("/" + tag + "/").Length;
+                    //    if (prvtaglength > elemXPath.Length - prvtaglength)
+                    //    {
+                    //        elemXPath = "/" + tag + "[" + tagcount + "]";
+                    //    }
+                    //    else
+                    //    {
+                    //        elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
+                    //        elemXPath = "/" + tag + "[" + tagcount + "]/" + elemXPath;
+                    //    }
+                    //}
+                    //else
+                    //{
                         int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
                         if (prvtaglength > elemXPath.Length - prvtaglength)
                         {
@@ -114,27 +117,97 @@ namespace PlaylistEditor
                             tagcount++;
                             elemXPath = "/" + tag + "[" + tagcount + "]/" + elemXPath;
                         }
-                    }
+                    //}
                 }
                 else
                 {
-                    elemXPath = "/" + tag + elemXPath;
                     tagcount = 1;
+                    elemXPath = "/" + tag + "[" + tagcount + "]" + elemXPath;
+                    
                 }
                 prevtag = tag;
 
             }
 
+            this.txtExtracted.Text = children + Environment.NewLine + elemXPath.ToLower();
+            return elemXPath.ToLower(); 
+        }
+
+        private string getShortXPath(HtmlElement elem)
+        {
+            HtmlElement selelem = elem;
+            string elemXPath = "";
+            string prntXPath = "";
+            string children = "";
+            List<string> ParentTagsList = new List<string>();
+            List<string> TagsList = new List<string>();
+
+            //loop through the parents until reaching root
+            while (elem.Parent != null)
+            {
+                //from actual node go to parent
+                HtmlElement prnt = elem.Parent;
+                ParentTagsList.Add(prnt.TagName);
+                prntXPath = getParentLocation(prnt) + prntXPath;
+                elem = elem.Parent;
+            }
+            
+            //Add selected element to path;
+            elemXPath = getParentLocation(selelem);
+
+
+            //Join the selected path with the route to root
+            elemXPath = prntXPath + elemXPath; 
+
             ////br[1]/div[1]/ul[8]/li[1]/a
             //TODO: The XPath should be shorten to the nearest unique value and use // (from root XPath indicator)
             this.txtExtracted.Text = children + Environment.NewLine + elemXPath.ToLower();
-            return elemXPath.ToLower(); 
+            return elemXPath.ToLower();
+        }
+
+        private string getParentLocation(HtmlElement selelem)
+        {
+            string elemXPath = "";
+            string prevtag = ""; //holds the previous tag to create the duplicate tag index 
+            int tagcount = 1; //holds the duplicate tag index
+            if (selelem.Parent != null && selelem.Parent.Children != null)
+            {
+                foreach (HtmlElement chld in selelem.Parent.Children)
+                {
+                    string tag = chld.TagName;
+                    if (tag == prevtag)
+                    {
+                        tagcount++;
+                        int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
+                        if (prvtaglength > elemXPath.Length - prvtaglength)
+                        {
+                            elemXPath = "/" + tag + "[" + tagcount + "]";
+                        }
+                        else
+                        {
+                            elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
+
+                            tagcount++;
+                            elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+                        }
+                    }
+                    else
+                    {
+                        tagcount = 1;
+                        elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+
+                    }
+                    prevtag = tag;
+                    if (chld.InnerHtml == selelem.InnerHtml) { break; }
+                }
+            }
+            return elemXPath;
         }
 
         private void document_MouseOver(object sender, HtmlElementEventArgs e)
         {
             HtmlElement selelement = ChangeHTMLTagStyle(e.ToElement);
-            string path =  getXPath(selelement);
+            string path = getShortXPath(selelement);
             //string path = getXPath((HtmlDocument)sender, selelement);
 
             
@@ -215,7 +288,7 @@ namespace PlaylistEditor
             {
                 string style = element.Style;
                 this.elementStyles.Add(element, style);
-                element.Style = style + "; background-color: #ffc;";
+                element.Style = style + "; border-color: red; border-style: solid; border-width: medium;";
             }
 
             return element;

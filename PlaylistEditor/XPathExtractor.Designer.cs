@@ -93,9 +93,10 @@
             // 
             // btnXPATH
             // 
-            this.btnXPATH.Location = new System.Drawing.Point(406, 2);
+            this.btnXPATH.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnXPATH.Location = new System.Drawing.Point(792, 0);
             this.btnXPATH.Name = "btnXPATH";
-            this.btnXPATH.Size = new System.Drawing.Size(75, 23);
+            this.btnXPATH.Size = new System.Drawing.Size(87, 23);
             this.btnXPATH.TabIndex = 6;
             this.btnXPATH.Text = "XPATH";
             this.btnXPATH.UseVisualStyleBackColor = true;
@@ -103,9 +104,10 @@
             // 
             // txtXPath
             // 
-            this.txtXPath.Location = new System.Drawing.Point(3, 3);
+            this.txtXPath.Dock = System.Windows.Forms.DockStyle.Top;
+            this.txtXPath.Location = new System.Drawing.Point(0, 0);
             this.txtXPath.Name = "txtXPath";
-            this.txtXPath.Size = new System.Drawing.Size(397, 22);
+            this.txtXPath.Size = new System.Drawing.Size(879, 22);
             this.txtXPath.TabIndex = 7;
             // 
             // XPathExtractor
