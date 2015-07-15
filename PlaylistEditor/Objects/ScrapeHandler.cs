@@ -325,40 +325,39 @@ namespace PlaylistEditor
         {
             string result = "";
             try { 
-                using(TextReader tr = new StringReader(inhtml))
-                {
-                    XmlDocument htmldoc = XMLHandler.HTMLtoXML(tr);
 
-                    ///////////////////
-                    //XPathDocument x = new XPathDocument(new StringReader(htmldoc.InnerXml));
-                    //XPathNavigator xpathNav = x.CreateNavigator();
-                    //xpathNav.MoveToFollowing(XPathNodeType.Element);
-                    //IDictionary<string, string> docNSIS = xpathNav.GetNamespacesInScope(XmlNamespaceScope.All);
+                XmlDocument htmldoc = XMLHandler.HTMLtoXML(inhtml);
 
-                    ////XmlDocument doc = new XmlDocument();
-                    //XmlNamespaceManager namespaces = new XmlNamespaceManager(htmldoc.NameTable);
+                ///////////////////
+                //XPathDocument x = new XPathDocument(new StringReader(htmldoc.InnerXml));
+                //XPathNavigator xpathNav = x.CreateNavigator();
+                //xpathNav.MoveToFollowing(XPathNodeType.Element);
+                //IDictionary<string, string> docNSIS = xpathNav.GetNamespacesInScope(XmlNamespaceScope.All);
 
-                    //foreach(var ns in docNSIS)
-                    //{
-                    //    namespaces.AddNamespace(ns.Key, ns.Value);
-                    //}
+                ////XmlDocument doc = new XmlDocument();
+                //XmlNamespaceManager namespaces = new XmlNamespaceManager(htmldoc.NameTable);
 
-                    //XPathNodeIterator xPathIt = xpathNav.Select(XPathNode);
-                    //while (xPathIt.MoveNext())
-                    //{
-                    //    Console.WriteLine(xPathIt.Current.Value);
-                    //}
+                //foreach(var ns in docNSIS)
+                //{
+                //    namespaces.AddNamespace(ns.Key, ns.Value);
+                //}
 
-                    ////namespaces.AddNamespace("ns", "urn:hl7-org:v3");
-                    ////XmlNode idNode = htmldoc.SelectSingleNode("/My_RootNode/ns:id", namespaces);
-                    //XmlNode idNode = htmldoc.SelectSingleNode(XPathNode, namespaces);
+                //XPathNodeIterator xPathIt = xpathNav.Select(XPathNode);
+                //while (xPathIt.MoveNext())
+                //{
+                //    Console.WriteLine(xPathIt.Current.Value);
+                //}
 
-                    ///////////////////
+                ////namespaces.AddNamespace("ns", "urn:hl7-org:v3");
+                ////XmlNode idNode = htmldoc.SelectSingleNode("/My_RootNode/ns:id", namespaces);
+                //XmlNode idNode = htmldoc.SelectSingleNode(XPathNode, namespaces);
 
-                    XmlNode foundNode = htmldoc.SelectSingleNode(XPathNode);
-                    if (foundNode != null)
-                        result = foundNode.InnerText;
-                }
+                ///////////////////
+
+                XmlNode foundNode = htmldoc.SelectSingleNode(XPathNode);
+                if (foundNode != null)
+                    result = foundNode.InnerText;
+
             }
             catch (System.Exception excpt)
             {
@@ -403,17 +402,13 @@ namespace PlaylistEditor
             string result = "";
             try
             {
-                using (TextReader tr = new StringReader(inhtml))
-                {
-                    XmlDocument htmldoc = XMLHandler.HTMLtoXML(tr);
-
-                    XmlNodeList foundNodes = htmldoc.SelectNodes(XPathNode);
-                    if (foundNodes != null)
-                    { 
-                        foreach(XmlNode xnode in foundNodes)
-                        {
-                            result += xnode.InnerText + Environment.NewLine;
-                        }
+                XmlDocument htmldoc = XMLHandler.HTMLtoXML(inhtml);
+                XmlNodeList foundNodes = htmldoc.SelectNodes(XPathNode);
+                if (foundNodes != null)
+                { 
+                    foreach(XmlNode xnode in foundNodes)
+                    {
+                        result += xnode.InnerText + Environment.NewLine;
                     }
                 }
             }

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.XPath;
 
 namespace PlaylistEditor
 {
@@ -179,28 +180,43 @@ namespace PlaylistEditor
             mut.ReleaseMutex();
         }
 
-        public static XmlDocument HTMLtoXML(TextReader reader)
+        public static XmlDocument HTMLtoXML(string html)
         {
-
-            // setup SgmlReader
-            Sgml.SgmlReader sgmlReader = new Sgml.SgmlReader();
-            sgmlReader.DocType = "HTML";
-            sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
-            sgmlReader.CaseFolding = Sgml.CaseFolding.ToLower;
-            sgmlReader.InputStream = reader;
-            sgmlReader.IgnoreDtd = true;
-
-            //string strXMLPattern = @"xmlns(:\w+)?="".+""";
-            //string htmlCleaned = Regex.Replace(sgmlReader.ReadOuterXml(), strXMLPattern, "");
-
-            string htmlCleaned = RemoveAllNamespaces(sgmlReader.ReadOuterXml());
+            string htmlCleaned = HTMLtoXMLString(html);
 
             // create document
             XmlDocument doc = new XmlDocument();
-            doc.PreserveWhitespace = true;
+            doc.PreserveWhitespace = false;
             doc.XmlResolver = null;
             doc.LoadXml(htmlCleaned);
             return doc;
+        }
+
+        
+        public static XPathNavigator HTMLtoXPathNav(string html)
+        {
+            string htmlCleaned = HTMLtoXMLString(html);
+
+            XPathDocument doc = new XPathDocument(new StringReader(htmlCleaned));
+            XPathNavigator nav = doc.CreateNavigator();
+
+            return nav;
+        }
+
+        public static String HTMLtoXMLString(string html)
+        {
+            using (TextReader htmlReader = new StringReader(html))
+            {
+                // setup SgmlReader
+                Sgml.SgmlReader sgmlReader = new Sgml.SgmlReader();
+                sgmlReader.DocType = "HTML";
+                sgmlReader.WhitespaceHandling = WhitespaceHandling.None;
+                sgmlReader.CaseFolding = Sgml.CaseFolding.ToLower;
+                sgmlReader.InputStream = htmlReader;
+                sgmlReader.IgnoreDtd = false;
+
+                return RemoveAllNamespaces(sgmlReader.ReadOuterXml());
+            }
         }
 
         public static string FindXPath(XmlNode node)
@@ -255,7 +271,8 @@ namespace PlaylistEditor
         {
             XElement xmlDocumentWithoutNs = RemoveAllNamespaces(XElement.Parse(xmlDocument));
 
-            return xmlDocumentWithoutNs.ToString();
+            //return xmlDocumentWithoutNs.ToString();
+            return xmlDocumentWithoutNs.ToString(SaveOptions.DisableFormatting);
         }
 
         //Core recursion function
@@ -308,5 +325,44 @@ namespace PlaylistEditor
             return inNode;
         }
 
+        public static void RecursiveWalk(XPathNavigator navigator, string selected)
+        {
+
+            switch (navigator.NodeType)
+            {
+                case XPathNodeType.Element:
+                    if (navigator.Prefix == String.Empty)
+                        Console.WriteLine("<{0}>", navigator.LocalName);
+                    else
+                        Console.Write("<{0}:{1}>", navigator.Prefix, navigator.LocalName);
+                    Console.WriteLine("\t" + navigator.NamespaceURI);
+                    break;
+                //case XPathNodeType.Text:
+                //    Console.WriteLine("\t" + navigator.Value);
+                //    break;
+            }
+
+            if (navigator.MoveToFirstChild())
+            {
+                do
+                {
+                    if (navigator.OuterXml == selected)
+                    { break; }
+                    RecursiveWalk(navigator, selected);
+                } while (navigator.MoveToNext());
+
+                navigator.MoveToParent();
+                if (navigator.NodeType == XPathNodeType.Element)
+                    Console.WriteLine("</{0}>", navigator.Name);
+            }
+            else
+            {
+                if (navigator.NodeType == XPathNodeType.Element)
+                {
+                    Console.WriteLine("</{0}>", navigator.Name);
+                }
+            }
+        }
+        
     }
 }

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
+using System.Xml.XPath;
 
 namespace PlaylistEditor
 {
@@ -165,37 +166,110 @@ namespace PlaylistEditor
             return elemXPath.ToLower();
         }
 
+        private string getXpathNavXPath(HtmlElement elem)
+        {
+            string prntXPath = "";
+            List<string> ParentTagsList = new List<string>();
+
+            string XMLelem = "";
+            XPathNavigator xpathNav = null;
+
+            //Convert selected element to XML
+            XMLelem = XMLHandler.HTMLtoXMLString(elem.OuterHtml);
+
+            //loop through the parents until reaching root
+            while (elem.Parent != null)
+            {   //(Using HTMLElement)
+                //from actual node go to parent 
+                //HtmlElement prnt = elem.Parent;
+                //ParentTagsList.Add(prnt.TagName);
+                //prntXPath = getParentLocation(prnt) + prntXPath;
+
+                //(Using HTMLDocument)
+                XmlDocument prntXDoc = XMLHandler.HTMLtoXML(elem.Parent.OuterHtml);
+                string Xelem = XMLHandler.HTMLtoXMLString(elem.OuterHtml);
+                ParentTagsList.Add(prntXDoc.DocumentElement.Name);
+                prntXPath = getParentXPath(prntXDoc, Xelem, elem.TagName.ToLower()) + prntXPath;
+                elem = elem.Parent;
+            }
+
+            ////br[1]/div[1]/ul[8]/li[1]/a
+            //TODO: The XPath should be shorten to the nearest unique value and use // (from root XPath indicator)
+            this.txtExtracted.Text = prntXPath;
+            return prntXPath.ToLower();
+        }
+
+        private string getParentXPath(XmlDocument XParent, string XElement, string XElementName)
+        {
+            string elemXPath = "";
+            string prevtag = ""; //holds the previous tag to create the duplicate tag index 
+            int tagcount = 0; //holds the duplicate tag index
+
+            foreach (XmlNode chld in XParent.FirstChild.ChildNodes)
+            {
+                string tag = chld.Name;
+
+                //prntXDoc.FirstChild.ChildNodes[2].OuterXml.Contains(Xelem);
+                //TODO: each loop in parent should look for the child that contains the selected element.
+                //from that node search again for the child that contains the selected item.
+                //This loop could be created from root instead of from element backwards... Needs Testing 7-14-2015
+
+                if (tag == XElementName)//Only write to XPath if the tag is the same not if it is a sibling. 7-13-2015
+                {
+                    tagcount++;
+                    int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
+                    if (prvtaglength > elemXPath.Length - prvtaglength)
+                    {
+                        elemXPath = "/" + tag + "[" + tagcount + "]";
+                    }
+                    else
+                    {
+                        elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
+
+                        tagcount++;
+                        elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+                    }
+                }
+                prevtag = tag;
+                if (chld.OuterXml == XElement) { break; }
+            }
+
+            return elemXPath;
+        }
+
         private string getParentLocation(HtmlElement selelem)
         {
             string elemXPath = "";
             string prevtag = ""; //holds the previous tag to create the duplicate tag index 
-            int tagcount = 1; //holds the duplicate tag index
+            int tagcount = 0; //holds the duplicate tag index
             if (selelem.Parent != null && selelem.Parent.Children != null)
             {
                 foreach (HtmlElement chld in selelem.Parent.Children)
                 {
                     string tag = chld.TagName;
-                    if (tag == prevtag)
+                    if (tag == selelem.TagName)//Only write to XPath if the tag is the same not if it is a sibling. 7-13-2015
                     {
-                        tagcount++;
-                        int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
-                        if (prvtaglength > elemXPath.Length - prvtaglength)
-                        {
-                            elemXPath = "/" + tag + "[" + tagcount + "]";
-                        }
-                        else
-                        {
-                            elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
-
+                        //if (tag == prevtag)
+                        //{
                             tagcount++;
-                            elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
-                        }
-                    }
-                    else
-                    {
-                        tagcount = 1;
-                        elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+                            int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
+                            if (prvtaglength > elemXPath.Length - prvtaglength)
+                            {
+                                elemXPath = "/" + tag + "[" + tagcount + "]";
+                            }
+                            else
+                            {
+                                elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
 
+                                tagcount++;
+                                elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+                            }
+                        //}
+                        //else
+                        //{
+                        //    tagcount = 1;
+                        //    elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+                        //}
                     }
                     prevtag = tag;
                     if (chld.InnerHtml == selelem.InnerHtml) { break; }
@@ -206,8 +280,13 @@ namespace PlaylistEditor
 
         private void document_MouseOver(object sender, HtmlElementEventArgs e)
         {
+            string path = getXpathNavXPath(e.ToElement);
+
             HtmlElement selelement = ChangeHTMLTagStyle(e.ToElement);
-            string path = getShortXPath(selelement);
+            //string path = getShortXPath(selelement);
+
+
+
             //string path = getXPath((HtmlDocument)sender, selelement);
 
             
