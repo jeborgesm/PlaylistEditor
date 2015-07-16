@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
@@ -289,6 +288,46 @@ namespace PlaylistEditor
                 return xElement;
             }
             return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
+        }
+
+        public static string getParentXPath(XmlNodeList XParentNodes, string XElement, string XElementName)
+        {
+            string elemXPath = "";
+            string prevtag = ""; //holds the previous tag to create the duplicate tag index 
+            int tagcount = 0; //holds the duplicate tag index
+
+            foreach (XmlNode chld in XParentNodes)
+            {
+                string tag = chld.Name;
+
+                if (tag == XElementName)//Only write to XPath if the tag is the same not if it is a sibling. 
+                {
+                    tagcount++;
+                    int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
+                    if (prvtaglength > elemXPath.Length - prvtaglength)
+                    {
+                        elemXPath = "/" + tag + "[" + tagcount + "]";
+                    }
+                    else
+                    {
+                        elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
+
+                        tagcount++;
+                        elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+                    }
+                }
+                else if (chld.OuterXml.Contains(XElement)) //Only run if the current node is not the child with content but one further down in the hierarchy
+                {
+                    //Recursive Search of children nodes when the current node has significative children
+                    //->Each loop in parent should look for the child that contains the selected element.
+                    //from that node search again for the child that contains the selected item.
+                    elemXPath = "/" + tag + "[1]" + getParentXPath(chld.ChildNodes, XElement, tag);
+                }
+                prevtag = tag;
+                if (chld.OuterXml == XElement) { break; }
+            }
+
+            return elemXPath;
         }
 
         public static XmlNodeList FullNodeList(XmlDocument xmldoc)
