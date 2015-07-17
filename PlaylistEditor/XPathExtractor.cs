@@ -28,6 +28,7 @@ namespace PlaylistEditor
         {
             this.Text = e.Url.ToString();
             this.document = wb.Document;
+            this.document.Click += new HtmlElementEventHandler(document_Click);
             this.document.MouseOver += new HtmlElementEventHandler(document_MouseOver);
             this.document.MouseLeave += new HtmlElementEventHandler(document_MouseLeave);
 
@@ -51,10 +52,22 @@ namespace PlaylistEditor
             //Change the style of the selected HTML element
             HtmlElement selelement = ChangeHTMLTagStyle(e.ToElement);
 
-            string path = HTMLHandler.XPathHTMLtoXML(e.ToElement);
-            this.txtXPath.Text = path;
-            this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(wb.DocumentText, path);
+            //string path = HTMLHandler.XPathHTMLtoXML(e.ToElement);
+            //this.txtXPath.Text = path;
+            //this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
         }
+
+        private void document_Click(object sender, HtmlElementEventArgs e)
+        {
+            string path = HTMLHandler.XPathHTMLtoXML(((HtmlDocument)sender).ActiveElement);
+            this.txtXPath.Text = path;
+            this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
+             //stop mouse events moving on to the HTML doc
+
+            e.ReturnValue = false;
+
+        }
+
 
         private HtmlElement ChangeHTMLTagStyle(HtmlElement element )
         {

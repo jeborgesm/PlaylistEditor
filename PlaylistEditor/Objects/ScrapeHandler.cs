@@ -419,5 +419,28 @@ namespace PlaylistEditor
             }
             return result;
         }
+
+        public static string ScrapeXMLXPath(string inhtml, string XPathNode)
+        {
+            string result = "";
+            try
+            {
+                XmlDocument htmldoc = XMLHandler.HTMLtoXML(inhtml);
+                XmlNodeList foundNodes = htmldoc.SelectNodes(XPathNode);
+                if (foundNodes != null)
+                {
+                    foreach (XmlNode xnode in foundNodes)
+                    {
+                        result += xnode.OuterXml + Environment.NewLine;
+                    }
+                }
+            }
+            catch (System.Exception excpt)
+            {
+                ErrorHandler.ErrorRoutine(false, excpt);
+                Console.WriteLine(excpt.Message);
+            }
+            return result;
+        }
     }
 }
