@@ -7,6 +7,7 @@ namespace PlaylistEditor
 {
     public partial class XPathExtractor : Form
     {
+        private HtmlElement mouseElement;
         private HtmlDocument document;
         WebBrowser wb;
         private IDictionary<HtmlElement, string> elementStyles = new Dictionary<HtmlElement, string>();
@@ -20,20 +21,18 @@ namespace PlaylistEditor
         {
             wb = this.advancedWebBrowser1.ActiveWebBrowser;
             wb.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(webBrowser1_DocumentCompleted);
+            wb.Document.Click += new HtmlElementEventHandler(document_Click);
+            wb.Document.MouseOver += new HtmlElementEventHandler(document_MouseOver);
+            wb.Document.MouseLeave += new HtmlElementEventHandler(document_MouseLeave);
             //WebBrowser wb = (WebBrowser)(((TabControl)this.advancedWebBrowser1.Controls["browserTabControl"])).SelectedTab.Controls[0];
             //wb.DocumentCompleted
         }
 
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            this.Text = e.Url.ToString();
-            this.document = wb.Document;
-            this.document.Click += new HtmlElementEventHandler(document_Click);
-            this.document.MouseOver += new HtmlElementEventHandler(document_MouseOver);
-            this.document.MouseLeave += new HtmlElementEventHandler(document_MouseLeave);
-
+            Text = e.Url.ToString();//Header updated with current URL
             XmlDocument htmldoc = XMLHandler.HTMLtoXML(wb.DocumentText);
-            this.txtExtracted.Text = htmldoc.OuterXml;
+            this.txtExtracted.Text = XMLHandler.Pretty(htmldoc);
         }
 
         private void document_MouseLeave(object sender, HtmlElementEventArgs e)
@@ -52,6 +51,7 @@ namespace PlaylistEditor
             //Change the style of the selected HTML element
             HtmlElement selelement = ChangeHTMLTagStyle(e.ToElement);
 
+            mouseElement = e.ToElement;
             //string path = HTMLHandler.XPathHTMLtoXML(e.ToElement);
             //this.txtXPath.Text = path;
             //this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
@@ -59,7 +59,8 @@ namespace PlaylistEditor
 
         private void document_Click(object sender, HtmlElementEventArgs e)
         {
-            string path = HTMLHandler.XPathHTMLtoXML(((HtmlDocument)sender).ActiveElement);
+            //string path = HTMLHandler.XPathHTMLtoXML(((HtmlDocument)sender).ActiveElement);
+            string path = HTMLHandler.XPathHTMLtoXML(mouseElement);
             this.txtXPath.Text = path;
             this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
              //stop mouse events moving on to the HTML doc

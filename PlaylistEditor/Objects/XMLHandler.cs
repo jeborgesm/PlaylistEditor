@@ -209,12 +209,13 @@ namespace PlaylistEditor
                 // setup SgmlReader
                 Sgml.SgmlReader sgmlReader = new Sgml.SgmlReader();
                 sgmlReader.DocType = "HTML";
-                sgmlReader.WhitespaceHandling = WhitespaceHandling.None;
+                sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
                 sgmlReader.CaseFolding = Sgml.CaseFolding.ToLower;
                 sgmlReader.InputStream = htmlReader;
-                sgmlReader.IgnoreDtd = false;
+                //sgmlReader.IgnoreDtd = false;
+                string readXML = sgmlReader.ReadOuterXml();
 
-                return RemoveAllNamespaces(sgmlReader.ReadOuterXml());
+                return RemoveAllNamespaces(readXML);
             }
         }
 
@@ -316,12 +317,17 @@ namespace PlaylistEditor
                         elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
                     }
                 }
-                else if (chld.OuterXml.Contains(XElement)) //Only run if the current node is not the child with content but one further down in the hierarchy
+                //else if (chld.OuterXml.Contains(XElement)) //Only run if the current node is not the child with content but one further down in the hierarchy
+                else if (chld.ParentNode.InnerXml.Contains(XElement)) //EXPERIMENTAL 7/22/2015
                 {
                     //Recursive Search of children nodes when the current node has significative children
                     //->Each loop in parent should look for the child that contains the selected element.
                     //from that node search again for the child that contains the selected item.
                     elemXPath = "/" + tag + "[1]" + getParentXPath(chld.ChildNodes, XElement, tag);
+
+                    //ERR Notes:
+                    //getparentXPath is only using the first child node count instead of recursively going thriough the children.
+                    //When the recursion happens the XElement to be found is larger that what is supposed to be inside the parent.
                 }
                 prevtag = tag;
                 if (chld.OuterXml == XElement) { break; }
@@ -402,6 +408,23 @@ namespace PlaylistEditor
                 }
             }
         }
-        
+
+        static public string Pretty(XmlDocument doc)
+        {
+            StringBuilder sb = new StringBuilder();
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                IndentChars = "  ",
+                NewLineChars = "\r\n",
+                NewLineHandling = NewLineHandling.Replace
+            };
+            using (XmlWriter writer = XmlWriter.Create(sb, settings))
+            {
+                doc.Save(writer);
+            }
+            return sb.ToString();
+        }
+
     }
 }
