@@ -116,7 +116,7 @@ namespace PlaylistEditor
             return elemXPath.ToLower();
         }
 
-        public static string XPathHTMLtoXML(HtmlElement elem)
+        public static string XPathHTMLtoXMLBackwards(HtmlElement elem)
         {
             string prntXPath = "";
             List<string> ParentTagsList = new List<string>();
@@ -126,6 +126,10 @@ namespace PlaylistEditor
 
             //Convert selected element to XML
             XMLelem = XMLHandler.HTMLtoXMLString(elem.OuterHtml);
+
+            //TODO!! ==V
+            //The search has to be done after the complete document is in xml not using parent and intermediate conversions
+            //the result is not the same
 
             XmlDocument prntXDoc = null;
             //loop through the parents until reaching root
@@ -150,10 +154,44 @@ namespace PlaylistEditor
             }
 
             ////br[1]/div[1]/ul[8]/li[1]/a
+            ///html[1]/body[1]/br[1]/p[1]/hr[1]/center[1]/hr[1]/p[1]/p[1]
             //TODO: The XPath should be shorten to the nearest unique value and use // (from root XPath indicator)
             //this.txtExtracted.Text = prntXPath;
             return prntXPath.ToLower();
         }
+
+        public static string XPathHTMLtoXML(string html, string elem, string tagname)
+        {
+            string prntXPath = "";
+            List<string> ParentTagsList = new List<string>();
+
+            string XMLelem = "";
+
+            //Convert selected element to XML
+            XMLelem = XMLHandler.HTMLtoXMLString(elem);
+
+            //TODO!! ==V
+            //The search has to be done after the complete document is in xml not using parent and intermediate conversions
+            //the result is not the same
+
+            XmlDocument prntXDoc = null;
+
+            prntXDoc = XMLHandler.HTMLtoXML(html);
+            prntXPath = XMLHandler.getChildrenXPath(prntXDoc.FirstChild.ChildNodes, XMLelem) + prntXPath;
+            
+
+            if (prntXDoc != null)
+            {
+                prntXPath = "//" + prntXDoc.FirstChild.Name + "[1]" + prntXPath;
+            }
+
+            ////br[1]/div[1]/ul[8]/li[1]/a
+            ///html[1]/body[1]/br[1]/p[1]/hr[1]/center[1]/hr[1]/p[1]/p[1]
+            //TODO: The XPath should be shorten to the nearest unique value and use // (from root XPath indicator)
+            //this.txtExtracted.Text = prntXPath;
+            return prntXPath.ToLower();
+        }
+
 
         public static string getParentLocation(HtmlElement selelem)
         {

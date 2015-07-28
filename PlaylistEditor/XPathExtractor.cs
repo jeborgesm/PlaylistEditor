@@ -7,8 +7,9 @@ namespace PlaylistEditor
 {
     public partial class XPathExtractor : Form
     {
-        private HtmlElement mouseElement;
-        private HtmlDocument document;
+        private string elementTag;
+        private string elementHtml;
+        private string selectedbody;
         WebBrowser wb;
         private IDictionary<HtmlElement, string> elementStyles = new Dictionary<HtmlElement, string>();
 
@@ -48,10 +49,13 @@ namespace PlaylistEditor
 
         private void document_MouseOver(object sender, HtmlElementEventArgs e)
         {
+            selectedbody = ((HtmlDocument)sender).Body.OuterHtml;
+            elementHtml = e.ToElement.OuterHtml;
+            elementTag = e.ToElement.TagName;
+
             //Change the style of the selected HTML element
             HtmlElement selelement = ChangeHTMLTagStyle(e.ToElement);
 
-            mouseElement = e.ToElement;
             //string path = HTMLHandler.XPathHTMLtoXML(e.ToElement);
             //this.txtXPath.Text = path;
             //this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
@@ -60,15 +64,18 @@ namespace PlaylistEditor
         private void document_Click(object sender, HtmlElementEventArgs e)
         {
             //string path = HTMLHandler.XPathHTMLtoXML(((HtmlDocument)sender).ActiveElement);
-            string path = HTMLHandler.XPathHTMLtoXML(mouseElement);
+            string path = HTMLHandler.XPathHTMLtoXML(selectedbody, elementHtml, elementTag);
             this.txtXPath.Text = path;
-            this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
-             //stop mouse events moving on to the HTML doc
+
+            string gethtml = HTTPHandler.HttpGet(wb.Url.ToString());
+
+            //this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
+            this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(gethtml, path);
+            //stop mouse events moving on to the HTML doc
 
             e.ReturnValue = false;
 
         }
-
 
         private HtmlElement ChangeHTMLTagStyle(HtmlElement element )
         {
@@ -84,7 +91,7 @@ namespace PlaylistEditor
 
         private void btnXPATH_Click(object sender, EventArgs e)
         {
-            wb = this.advancedWebBrowser1.ActiveWebBrowser;
+            //wb = this.advancedWebBrowser1.ActiveWebBrowser;
             //MessageBox.Show(wb.Url.ToString());
             //MessageBox.Show(ScrapeHandler.ScrapeValueXPath(wb.DocumentText, this.txtXPath.Text));
             this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(wb.DocumentText, this.txtXPath.Text);

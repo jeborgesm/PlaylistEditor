@@ -304,21 +304,21 @@ namespace PlaylistEditor
                 if (tag == XElementName)//Only write to XPath if the tag is the same not if it is a sibling. 
                 {
                     tagcount++;
-                    int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
-                    if (prvtaglength > elemXPath.Length - prvtaglength)
-                    {
+                    //int prvtaglength = ("/" + tag + "[" + tagcount + "]/").Length;
+                    //if (prvtaglength > elemXPath.Length - prvtaglength)
+                    //{
                         elemXPath = "/" + tag + "[" + tagcount + "]";
-                    }
-                    else
-                    {
-                        elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
+                    //}
+                    //else
+                    //{
+                    //    elemXPath = elemXPath.Substring(prvtaglength, elemXPath.Length - prvtaglength);
 
-                        tagcount++;
-                        elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
-                    }
+                    //    tagcount++;
+                    //    elemXPath = elemXPath + "/" + tag + "[" + tagcount + "]";
+                    //}
                 }
-                //else if (chld.OuterXml.Contains(XElement)) //Only run if the current node is not the child with content but one further down in the hierarchy
-                else if (chld.ParentNode.InnerXml.Contains(XElement)) //EXPERIMENTAL 7/22/2015
+                else if (chld.OuterXml.Contains(XElement)) //Only run if the current node is not the child with content but one further down in the hierarchy
+                //else if (chld.ParentNode.InnerXml.Contains(XElement)) //EXPERIMENTAL 7/22/2015
                 {
                     //Recursive Search of children nodes when the current node has significative children
                     //->Each loop in parent should look for the child that contains the selected element.
@@ -330,7 +330,36 @@ namespace PlaylistEditor
                     //When the recursion happens the XElement to be found is larger that what is supposed to be inside the parent.
                 }
                 prevtag = tag;
-                if (chld.OuterXml == XElement) { break; }
+                if (chld.OuterXml == XElement)
+                {
+                    break;
+                }
+            }
+
+            return elemXPath;
+        }
+
+        public static string getChildrenXPath(XmlNodeList XChildNodes, string XElement)
+        {
+            Dictionary<string, int> taglist =  new Dictionary<string, int>();
+            string elemXPath = "";
+            int tagcount = 0; //holds the duplicate tag index
+
+            foreach (XmlNode chld in XChildNodes)
+            {
+                //The tag type count is saved in a dictionary for easy retrieval and count type consistency
+                taglist.TryGetValue(chld.Name, out tagcount);
+                taglist[chld.Name] = ++tagcount;
+
+                if (chld.OuterXml.Contains(XElement)) //Only run if the current node is not the child with content but one further down in the hierarchy
+                {
+                    //if (tag != prevtag)//Only write to XPath if the tag is the same not if it is a sibling. 
+                    //{
+                    //Recursive Search of children nodes when the current node has significative children
+                    //->Each loop in parent should look for the child that contains the selected element.
+                    //from that node search again for the child that contains the selected item.
+                    elemXPath = "/" + chld.Name + "[" + taglist[chld.Name] + "]" +  getChildrenXPath(chld.ChildNodes, XElement);
+                }
             }
 
             return elemXPath;
