@@ -187,7 +187,9 @@ namespace PlaylistEditor
             XmlDocument doc = new XmlDocument();
             doc.PreserveWhitespace = false;
             doc.XmlResolver = null;
-            doc.LoadXml(htmlCleaned);
+            if (htmlCleaned != string.Empty)
+            { doc.LoadXml(htmlCleaned);}
+            
             return doc;
         }
 
@@ -269,10 +271,15 @@ namespace PlaylistEditor
 
         public static string RemoveAllNamespaces(string xmlDocument)
         {
-            XElement xmlDocumentWithoutNs = RemoveAllNamespaces(XElement.Parse(xmlDocument));
+            if (xmlDocument != string.Empty)
+            {
+                XElement xmlDocumentWithoutNs = RemoveAllNamespaces(XElement.Parse(xmlDocument));
 
-            //return xmlDocumentWithoutNs.ToString();
-            return xmlDocumentWithoutNs.ToString(SaveOptions.DisableFormatting);
+                //return xmlDocumentWithoutNs.ToString();
+                return xmlDocumentWithoutNs.ToString(SaveOptions.DisableFormatting);
+            }
+            else
+            { return string.Empty; }
         }
 
         //Core recursion function
@@ -353,8 +360,6 @@ namespace PlaylistEditor
 
                 if (chld.OuterXml.Contains(XElement)) //Only run if the current node is not the child with content but one further down in the hierarchy
                 {
-                    //if (tag != prevtag)//Only write to XPath if the tag is the same not if it is a sibling. 
-                    //{
                     //Recursive Search of children nodes when the current node has significative children
                     //->Each loop in parent should look for the child that contains the selected element.
                     //from that node search again for the child that contains the selected item.

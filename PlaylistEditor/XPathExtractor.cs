@@ -21,6 +21,7 @@ namespace PlaylistEditor
         private void XPathExtractor_Load(object sender, EventArgs e)
         {
             wb = this.advancedWebBrowser1.ActiveWebBrowser;
+            ((this.advancedWebBrowser1.Controls)[1]).Visible = false;
             wb.DocumentCompleted += new WebBrowserDocumentCompletedEventHandler(webBrowser1_DocumentCompleted);
             wb.Document.Click += new HtmlElementEventHandler(document_Click);
             wb.Document.MouseOver += new HtmlElementEventHandler(document_MouseOver);
@@ -49,7 +50,7 @@ namespace PlaylistEditor
 
         private void document_MouseOver(object sender, HtmlElementEventArgs e)
         {
-            selectedbody = ((HtmlDocument)sender).Body.OuterHtml;
+            selectedbody = ((HtmlDocument)sender).Body.Parent.OuterHtml;
             elementHtml = e.ToElement.OuterHtml;
             elementTag = e.ToElement.TagName;
 
@@ -67,10 +68,12 @@ namespace PlaylistEditor
             string path = HTMLHandler.XPathHTMLtoXML(selectedbody, elementHtml, elementTag);
             this.txtXPath.Text = path;
 
-            string gethtml = HTTPHandler.HttpGet(wb.Url.ToString());
+            //string gethtml = HTTPHandler.HttpGet(wb.Url.ToString());
+            //this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(gethtml, path);
 
             //this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(wb.DocumentText, path);
-            this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(gethtml, path);
+            this.txtExtracted.Text = ScrapeHandler.ScrapeXMLXPath(selectedbody, path);
+
             //stop mouse events moving on to the HTML doc
 
             e.ReturnValue = false;
@@ -94,7 +97,9 @@ namespace PlaylistEditor
             //wb = this.advancedWebBrowser1.ActiveWebBrowser;
             //MessageBox.Show(wb.Url.ToString());
             //MessageBox.Show(ScrapeHandler.ScrapeValueXPath(wb.DocumentText, this.txtXPath.Text));
-            this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(wb.DocumentText, this.txtXPath.Text);
+            HtmlDocument doc = wb.Document;
+            this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(doc.Body.Parent.OuterHtml, this.txtXPath.Text);
+            //this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(wb.DocumentText, this.txtXPath.Text);
         }
 
 
