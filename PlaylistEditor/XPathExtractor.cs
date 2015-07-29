@@ -10,6 +10,7 @@ namespace PlaylistEditor
         private string elementTag;
         private string elementHtml;
         private string selectedbody;
+        private string activeURL;
         WebBrowser wb;
         private IDictionary<HtmlElement, string> elementStyles = new Dictionary<HtmlElement, string>();
 
@@ -27,14 +28,20 @@ namespace PlaylistEditor
             wb.Document.MouseOver += new HtmlElementEventHandler(document_MouseOver);
             wb.Document.MouseLeave += new HtmlElementEventHandler(document_MouseLeave);
             //WebBrowser wb = (WebBrowser)(((TabControl)this.advancedWebBrowser1.Controls["browserTabControl"])).SelectedTab.Controls[0];
-            //wb.DocumentCompleted
         }
 
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            Text = e.Url.ToString();//Header updated with current URL
-            XmlDocument htmldoc = XMLHandler.HTMLtoXML(wb.DocumentText);
-            this.txtExtracted.Text = XMLHandler.Pretty(htmldoc);
+            if (wb.Url.ToString() != activeURL)
+            {
+                activeURL = wb.Url.ToString();
+
+                Text = activeURL;//Header updated with current URL
+                XmlDocument htmldoc = XMLHandler.HTMLtoXML(wb.Document.Body.Parent.OuterHtml);
+
+                this.txtExtracted.Text = XMLHandler.Pretty(htmldoc);
+                populateTreeview(htmldoc);
+            }
         }
 
         private void document_MouseLeave(object sender, HtmlElementEventArgs e)
@@ -98,10 +105,75 @@ namespace PlaylistEditor
             //MessageBox.Show(wb.Url.ToString());
             //MessageBox.Show(ScrapeHandler.ScrapeValueXPath(wb.DocumentText, this.txtXPath.Text));
             HtmlDocument doc = wb.Document;
-            this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(doc.Body.Parent.OuterHtml, this.txtXPath.Text);
+
+            XmlDocument htmldoc = XMLHandler.HTMLtoXML(doc.Body.Parent.OuterHtml);
+            this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(htmldoc, this.txtXPath.Text);
             //this.txtExtracted.Text = ScrapeHandler.ScrapeValueListXPath(wb.DocumentText, this.txtXPath.Text);
         }
 
+        //Open the XML file, and start to populate the treeview
+        private void populateTreeview(XmlDocument xDoc)
+        {
+            if (xDoc != null)
+            {
+                try
+                {
+                    //Just a good practice -- change the cursor to a 
+                    //wait cursor while the nodes populate
+                    this.Cursor = Cursors.WaitCursor;
+
+                    tvXML.BeginUpdate();
+                    //Now, clear out the treeview, 
+                    //and add the first (root) node
+                    tvXML.Nodes.Clear();
+                    tvXML.Nodes.Add(new
+                      TreeNode(xDoc.DocumentElement.Name));
+                    TreeNode tNode = new TreeNode();
+                    tNode = (TreeNode)tvXML.Nodes[0];
+                    //We make a call to addTreeNode, 
+                    //where we'll add all of our nodes
+                    addTreeNode(xDoc.DocumentElement, tNode);
+                    //Expand the treeview to show all nodes
+                    tvXML.ExpandAll();
+                    tvXML.EndUpdate();
+                    tvXML.Nodes[0].EnsureVisible();
+                }
+                catch (XmlException xExc)
+                //Exception is thrown is there is an error in the Xml
+                {
+                    MessageBox.Show(xExc.Message);
+                }
+                catch (Exception ex) //General exception
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    this.Cursor = Cursors.Default; //Change the cursor back
+                }
+            }
+        }
+        //This function is called recursively until all nodes are loaded
+        private void addTreeNode(XmlNode xmlNode, TreeNode treeNode)
+        {
+            XmlNode xNode;
+            TreeNode tNode;
+            XmlNodeList xNodeList;
+            if (xmlNode.HasChildNodes) //The current node has children
+            {
+                xNodeList = xmlNode.ChildNodes;
+                for (int x = 0; x <= xNodeList.Count - 1; x++)
+                //Loop through the child nodes
+                {
+                    xNode = xmlNode.ChildNodes[x];
+                    treeNode.Nodes.Add(new TreeNode(xNode.Name));
+                    tNode = treeNode.Nodes[x];
+                    addTreeNode(xNode, tNode);
+                }
+            }
+            else //No children, so add the outer xml (trimming off whitespace)
+                treeNode.Text = xmlNode.OuterXml.Trim();
+        }
 
     }
 }

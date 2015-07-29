@@ -420,6 +420,28 @@ namespace PlaylistEditor
             return result;
         }
 
+        public static string ScrapeValueListXPath(XmlDocument htmldoc, string XPathNode)
+        {
+            string result = "";
+            try
+            {
+                XmlNodeList foundNodes = htmldoc.SelectNodes(XPathNode);
+                if (foundNodes != null)
+                {
+                    foreach (XmlNode xnode in foundNodes)
+                    {
+                        result += xnode.InnerText + Environment.NewLine;
+                    }
+                }
+            }
+            catch (System.Exception excpt)
+            {
+                ErrorHandler.ErrorRoutine(false, excpt);
+                Console.WriteLine(excpt.Message);
+            }
+            return result;
+        }
+
         public static string ScrapeXMLXPath(string inhtml, string XPathNode)
         {
             string result = "";
